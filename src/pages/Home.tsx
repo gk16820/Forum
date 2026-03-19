@@ -11,10 +11,14 @@ export const Home = () => {
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newTags, setNewTags] = useState('');
+  const [sortBy, setSortBy] = useState('New');
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/posts');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`http://localhost:3000/api/posts?sort=${sortBy.toLowerCase()}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
@@ -26,7 +30,9 @@ export const Home = () => {
 
   useEffect(() => {
     fetchPosts();
+  }, [sortBy]);
 
+  useEffect(() => {
     const handleOpenPost = () => setIsCreatingPost(true);
     window.addEventListener('openNewPostModal', handleOpenPost);
     return () => window.removeEventListener('openNewPostModal', handleOpenPost);
@@ -108,10 +114,14 @@ export const Home = () => {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Recent Discussions</h1>
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-500 font-medium">Sort by:</span>
-              <select className="bg-transparent text-sm font-semibold text-slate-900 border-none focus:ring-0 cursor-pointer outline-none">
-                <option>Hot</option>
-                <option>New</option>
-                <option>Top</option>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent text-sm font-semibold text-slate-900 border-none focus:ring-0 cursor-pointer outline-none"
+              >
+                <option value="Popular">Popular</option>
+                <option value="New">New</option>
+                {/* <option>Trending</option> */}
               </select>
             </div>
           </div>

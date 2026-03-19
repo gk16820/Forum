@@ -4,7 +4,8 @@ type User = {
   id: number;
   username: string;
   avatar: string;
-  role: string;
+  role?: string;
+  description?: string;
   points?: number;
 };
 

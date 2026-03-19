@@ -41,9 +41,9 @@ export const Navbar = () => {
                 <button className="text-slate-500 hover:text-blue-600 transition-colors relative hidden sm:block">
                   <Bell className="h-5 w-5" />
                 </button>
-                <div className="h-8 w-8 rounded-full border-2 border-slate-200 overflow-hidden cursor-pointer hover:border-blue-500 transition-colors">
+                <Link to="/profile" className="h-8 w-8 rounded-full border-2 border-slate-200 overflow-hidden cursor-pointer hover:border-blue-500 transition-colors">
                   <img src={user.avatar} alt={user.username} className="h-full w-full object-cover" />
-                </div>
+                </Link>
                 <button 
                   onClick={() => {
                     const event = new CustomEvent('openNewPostModal');

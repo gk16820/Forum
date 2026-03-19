@@ -31,15 +31,49 @@ export async function initDb() {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
     );
+
+    CREATE TABLE IF NOT EXISTS comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      postId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      parentId INTEGER,
+      content TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (postId) REFERENCES posts(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (parentId) REFERENCES comments(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS votes (
+      postId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      PRIMARY KEY (postId, userId),
+      FOREIGN KEY (postId) REFERENCES posts(id),
+      FOREIGN KEY (userId) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS followers (
+      followerId INTEGER NOT NULL,
+      followingId INTEGER NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (followerId, followingId),
+      FOREIGN KEY (followerId) REFERENCES users(id),
+      FOREIGN KEY (followingId) REFERENCES users(id)
+    );
   `);
+
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN description TEXT DEFAULT ""');
+  } catch (err) {} // Ignore if column already exists
 
   // Seed with an initial user if empty
   const userCount = await db.get('SELECT COUNT(*) as c FROM users');
   if (userCount.c === 0) {
     const defaultPassword = await bcrypt.hash('password123', 10);
     await db.run(
-      'INSERT INTO users (username, email, password, role, avatar, points) VALUES (?, ?, ?, ?, ?, ?)',
-      ['admin', 'admin@deved.com', defaultPassword, 'Admin', 'https://i.pravatar.cc/150?u=admin', 1500]
+      'INSERT INTO users (username, email, password, role, avatar, points, description) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['admin', 'admin@deved.com', defaultPassword, 'Admin', '/Blank profile.png', 1500, 'Chief Administrator of DevEd.']
     );
 
     await db.run(
