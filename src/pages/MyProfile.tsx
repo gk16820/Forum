@@ -7,6 +7,8 @@ export const MyProfile = () => {
   const { user, token, login } = useAuth();
   const [avatar, setAvatar] = useState(user?.avatar || '/Blank profile.png');
   const [description, setDescription] = useState(user?.description || '');
+  const [location, setLocation] = useState(user?.location || '');
+  const [interests, setInterests] = useState(user?.interests || '');
   const [success, setSuccess] = useState(false);
 
   const handleUpdate = async () => {
@@ -17,7 +19,7 @@ export const MyProfile = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ avatar, description })
+        body: JSON.stringify({ avatar, description, location, interests })
       });
       const data = await res.json();
       if (res.ok) {
@@ -78,6 +80,29 @@ export const MyProfile = () => {
                 className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 resize-none"
                 placeholder="Tell us about yourself..."
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
+                <input 
+                  type="text"
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g. New York, USA"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Interests</label>
+                <input 
+                  type="text"
+                  value={interests}
+                  onChange={e => setInterests(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g. Technology, Design"
+                />
+              </div>
             </div>
 
             {success && <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg font-medium">Profile successfully updated!</div>}

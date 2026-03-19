@@ -7,6 +7,8 @@ type User = {
   role?: string;
   description?: string;
   points?: number;
+  location?: string;
+  interests?: string;
 };
 
 interface AuthContextType {

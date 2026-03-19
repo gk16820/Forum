@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface UserHoverCardProps {
   userId: number;
@@ -7,12 +8,16 @@ interface UserHoverCardProps {
 }
 
 export const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isHovering, setIsHovering] = useState(false);
   const navigate = useNavigate();
   const timerRef = useRef<any>();
 
+  const isSelf = user?.id === userId;
+
   const handleMouseEnter = () => {
+    if (isSelf) return; // Prevent hover for self
     timerRef.current = setTimeout(async () => {
       setIsHovering(true);
       if (!profile) {
@@ -27,8 +32,15 @@ export const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
   };
 
   const handleMouseLeave = () => {
+    if (isSelf) return;
     clearTimeout(timerRef.current);
     setIsHovering(false);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSelf) return; // Prevent navigation for self (only navbar links work for self)
+    navigate(`/user/${userId}`);
   };
 
   return (
@@ -37,11 +49,11 @@ export const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
       onMouseEnter={handleMouseEnter} 
       onMouseLeave={handleMouseLeave}
     >
-      <div onClick={(e) => { e.stopPropagation(); navigate(`/user/${userId}`); }} className="cursor-pointer inline-block">
+      <div onClick={handleClick} className={`${isSelf ? 'cursor-default' : 'cursor-pointer'} inline-block`}>
         {children}
       </div>
 
-      {isHovering && (
+      {isHovering && !isSelf && (
         <div 
           onClick={(e) => e.stopPropagation()}
           className="absolute z-50 left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-4 animate-in fade-in slide-in-from-top-2 duration-200"

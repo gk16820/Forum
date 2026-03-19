@@ -61,11 +61,30 @@ export async function initDb() {
       FOREIGN KEY (followerId) REFERENCES users(id),
       FOREIGN KEY (followingId) REFERENCES users(id)
     );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      actorId INTEGER NOT NULL,
+      type TEXT NOT NULL, -- 'follow', 'comment'
+      postId INTEGER,
+      isRead INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (actorId) REFERENCES users(id),
+      FOREIGN KEY (postId) REFERENCES posts(id)
+    );
   `);
 
   try {
     await db.run('ALTER TABLE users ADD COLUMN description TEXT DEFAULT ""');
-  } catch (err) {} // Ignore if column already exists
+  } catch (err) {} 
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN location TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN interests TEXT DEFAULT ""');
+  } catch (err) {}
 
   // Seed with an initial user if empty
   const userCount = await db.get('SELECT COUNT(*) as c FROM users');

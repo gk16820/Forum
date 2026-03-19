@@ -10,6 +10,7 @@ import { Bookmarks } from './pages/Bookmarks';
 import { Communities } from './pages/Communities';
 import { MyProfile } from './pages/MyProfile';
 import { UserProfile } from './pages/UserProfile';
+import { Search } from './pages/Search';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/communities" element={<Communities />} />
             <Route path="/my-profile" element={<MyProfile />} />
             <Route path="/user/:id" element={<UserProfile />} />
+            <Route path="/search" element={<Search />} />
           </Routes>
         </div>
       </Router>

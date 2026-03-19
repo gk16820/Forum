@@ -23,6 +23,8 @@ export const PostCard = ({ post }: { post: any }) => {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [showSharePopover, setShowSharePopover] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const formattedTime = post.createdAt ? formatDistanceToNow(new Date(post.createdAt + 'Z'), { addSuffix: true }) : 'Just now';
 
@@ -106,6 +108,13 @@ export const PostCard = ({ post }: { post: any }) => {
     }
   };
 
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}/post/${post.id}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <article className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow mb-4">
       <div className="flex items-start gap-4">
@@ -171,10 +180,38 @@ export const PostCard = ({ post }: { post: any }) => {
               <MessageSquare className="h-4 w-4" />
               <span className="font-medium">{post.comments || comments.length} Comments</span>
             </button>
-            <button className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors">
-              <Share2 className="h-4 w-4" />
-              <span className="font-medium">Share</span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowSharePopover(!showSharePopover)}
+                className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+                <span className="font-medium">Share</span>
+              </button>
+              
+              {showSharePopover && (
+                <div className="absolute bottom-full left-0 mb-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <p className="text-sm font-bold text-slate-900 mb-3">Share this discussion</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={`${window.location.origin}/post/${post.id}`}
+                      className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 outline-none"
+                    />
+                    <button 
+                      onClick={handleCopyLink}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        copied ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="absolute bottom-0 left-4 translate-y-1/2 rotate-45 w-3 h-3 bg-white border-r border-b border-slate-200"></div>
+                </div>
+              )}
+            </div>
           </div>
           
           {showComments && (

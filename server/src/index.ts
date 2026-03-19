@@ -173,6 +173,93 @@ initDb().then((db) => {
     }
   });
 
+  app.get('/api/search', optionalAuthenticateToken, async (req: any, res: any) => {
+    try {
+      const q = (req.query.q || '').toString().trim();
+      if (!q) return res.json({ type: 'empty', results: [] });
+
+      if (q.startsWith('@')) {
+        const username = q.slice(1);
+        const users = await db.all('SELECT id, username, description, points, avatar FROM users WHERE username LIKE ? COLLATE NOCASE LIMIT 20', [`%${username}%`]);
+        return res.json({ type: 'users', results: users });
+      } else {
+        const isTag = q.startsWith('#');
+        const searchTerm = isTag ? q.slice(1) : q;
+        
+        let queryStr = `
+          SELECT p.*, u.id as authorId, u.username as authorName, u.description as authorDescription, u.avatar as authorAvatar 
+          FROM posts p
+          JOIN users u ON p.userId = u.id
+        `;
+        let queryParams: any[] = [];
+
+        if (isTag) {
+           queryStr += ` WHERE p.tags LIKE ? COLLATE NOCASE ORDER BY p.createdAt DESC LIMIT 20`;
+           // Since tags are stored as '["React","JS"]', searching for '"React"' (or just 'React') works
+           queryParams = [`%${searchTerm}%`]; 
+        } else {
+           queryStr += ` WHERE p.title LIKE ? COLLATE NOCASE OR p.content LIKE ? COLLATE NOCASE ORDER BY p.createdAt DESC LIMIT 20`;
+           queryParams = [`%${searchTerm}%`, `%${searchTerm}%`];
+        }
+
+        const rows = await db.all(queryStr, queryParams);
+
+        let userVotes: Record<number, string> = {};
+        if (req.user) {
+          const vRows = await db.all('SELECT postId, type FROM votes WHERE userId = ?', [req.user.id]);
+          vRows.forEach(v => userVotes[v.postId] = v.type);
+        }
+
+        const posts = rows.map(row => ({
+          id: row.id,
+          author: {
+            id: row.authorId,
+            name: row.authorName,
+            description: row.authorDescription,
+            avatar: row.authorAvatar
+          },
+          createdAt: row.createdAt,
+          timeAgo: row.createdAt, 
+          title: row.title,
+          content: row.content,
+          tags: JSON.parse(row.tags),
+          upvotes: row.upvotes,
+          comments: row.comments,
+          userVote: req.user ? (userVotes[row.id] || null) : null
+        }));
+
+        return res.json({ type: 'posts', queryType: isTag ? 'tag' : 'text', results: posts });
+      }
+    } catch (e) {
+      res.status(500).json({ error: 'Search failed' });
+    }
+  });
+
+  app.get('/api/notifications', authenticateToken, async (req: any, res: any) => {
+    try {
+      const rows = await db.all(`
+        SELECT n.*, u.username as actorName, u.avatar as actorAvatar, p.title as postTitle
+        FROM notifications n
+        JOIN users u ON n.actorId = u.id
+        LEFT JOIN posts p ON n.postId = p.id
+        WHERE n.userId = ?
+        ORDER BY n.createdAt DESC LIMIT 50
+      `, [req.user.id]);
+      res.json(rows);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.put('/api/notifications/:id/read', authenticateToken, async (req: any, res: any) => {
+    try {
+      await db.run('UPDATE notifications SET isRead = 1 WHERE id = ? AND userId = ?', [req.params.id, req.user.id]);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
   // Comments Route
   app.get('/api/posts/:id/comments', async (req, res) => {
     try {
@@ -215,6 +302,15 @@ initDb().then((db) => {
       await db.run('UPDATE posts SET comments = comments + 1 WHERE id = ?', [id]);
       await db.run('UPDATE users SET points = points + 1 WHERE id = ?', [req.user.id]);
       
+      // Create notification for post owner
+      const post = await db.get('SELECT userId FROM posts WHERE id = ?', [id]);
+      if (post && post.userId !== req.user.id) {
+         await db.run(
+           'INSERT INTO notifications (userId, actorId, type, postId) VALUES (?, ?, ?, ?)',
+           [post.userId, req.user.id, 'comment', id]
+         );
+      }
+
       res.status(201).json({ id: result.lastID });
     } catch (err) {
       res.status(500).json({ error: 'Failed to comment' });
@@ -256,7 +352,7 @@ initDb().then((db) => {
 
   app.get('/api/users/:id', optionalAuthenticateToken, async (req: any, res: any) => {
     try {
-      const user = await db.get('SELECT id, username, description, avatar, points, createdAt FROM users WHERE id = ?', [req.params.id]);
+      const user = await db.get('SELECT id, username, description, avatar, points, location, interests, createdAt FROM users WHERE id = ?', [req.params.id]);
       if (!user) return res.status(404).json({ error: 'Not found' });
       
       const followers = await db.get('SELECT COUNT(*) as c FROM followers WHERE followingId = ?', [user.id]);
@@ -286,6 +382,13 @@ initDb().then((db) => {
         res.json({ following: false });
       } else {
         await db.run('INSERT INTO followers (followerId, followingId) VALUES (?, ?)', [followerId, followingId]);
+        
+        // Create notification
+        await db.run(
+          'INSERT INTO notifications (userId, actorId, type) VALUES (?, ?, ?)',
+          [followingId, followerId, 'follow']
+        );
+
         res.json({ following: true });
       }
     } catch (e) {
@@ -294,10 +397,13 @@ initDb().then((db) => {
   });
 
   app.put('/api/users/profile', authenticateToken, async (req: any, res: any) => {
-    const { avatar, description } = req.body;
+    const { avatar, description, location, interests } = req.body;
     try {
-      await db.run('UPDATE users SET avatar = ?, description = ? WHERE id = ?', [avatar || '/Blank profile.png', description, req.user.id]);
-      const user = await db.get('SELECT id, username, avatar, description, points FROM users WHERE id = ?', [req.user.id]);
+      await db.run(
+        'UPDATE users SET avatar = ?, description = ?, location = ?, interests = ? WHERE id = ?', 
+        [avatar || '/Blank profile.png', description, location, interests, req.user.id]
+      );
+      const user = await db.get('SELECT id, username, avatar, description, location, interests, points FROM users WHERE id = ?', [req.user.id]);
       res.json({ success: true, user });
     } catch (e) {
       res.status(500).json({ error: 'Failed to update profile' });

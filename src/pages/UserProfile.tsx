@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
+import { Calendar, MapPin, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { format } from 'date-fns';
 
 export const UserProfile = () => {
   const { id } = useParams();
@@ -11,6 +13,7 @@ export const UserProfile = () => {
   
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('About');
 
   useEffect(() => {
     // If they click on their own profile implicitly, bounce them to /my-profile
@@ -21,7 +24,7 @@ export const UserProfile = () => {
 
     const fetchProfile = async () => {
       try {
-        const headers: Record<string, string> = {};
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
         
         const res = await fetch(`http://localhost:3000/api/users/${id}`, { headers });
@@ -64,41 +67,133 @@ export const UserProfile = () => {
   if (isLoading) return <div className="text-center py-20 text-slate-500">Loading profile...</div>;
   if (!profile) return <div className="text-center py-20 text-slate-500">User not found.</div>;
 
+  const joinedDate = profile.createdAt ? format(new Date(profile.createdAt + 'Z'), 'MMM yyyy') : 'Jan 2021';
+
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex bg-white min-h-screen">
       <Sidebar />
-      <div className="flex-1 py-6 lg:px-8 min-w-0">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-6">Profile</h1>
-        
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 text-center sm:text-left">
-            <img src={profile.avatar} className="w-32 h-32 rounded-full border-4 border-slate-100 object-cover" alt="Avatar" />
-            <div className="flex-1">
-              <h2 className="text-3xl font-bold text-slate-900 mb-2">{profile.username}</h2>
-              <div className="flex justify-center sm:justify-start gap-4 text-sm font-medium text-slate-600 mb-4">
-                <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">{profile.points || 0} Points</span>
-                <span className="py-1"><b>{profile.expectedFollowers}</b> Followers</span>
-                <span className="py-1"><b>{profile.expectedFollowing}</b> Following</span>
+      <div className="flex-1 py-8 lg:px-12 min-w-0">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors mb-8 group"
+        >
+          <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back</span>
+        </button>
+
+        <div className="max-w-4xl">
+          {/* Hero Section */}
+          <div className="flex flex-col md:flex-row items-start gap-8 mb-10">
+            <div className="relative">
+              <img 
+                src={profile.avatar} 
+                className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-white shadow-xl object-cover" 
+                alt={profile.username} 
+              />
+              <div className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+            </div>
+
+            <div className="flex-1 pt-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">
+                    {profile.username}
+                  </h1>
+                  <p className="text-lg text-slate-500 font-medium">Content Creator & Tech Enthusiast</p>
+                </div>
+                <button className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <MoreHorizontal className="h-6 w-6 text-slate-400" />
+                </button>
               </div>
-              
-              <button 
-                onClick={handleFollow}
-                className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-bold transition-colors ${
-                  profile.isFollowing 
-                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/20'
-                }`}
-              >
-                {profile.isFollowing ? 'Following' : 'Follow'}
-              </button>
+
+              <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mb-8">
+                {profile.description || "Sharing insights on the latest in tech, gadgets, and social media trends. Here to help and engage with the community."}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="bg-slate-50 px-8 py-3 rounded-2xl border border-slate-100 min-w-[140px]">
+                  <p className="text-2xl font-bold text-slate-900">{profile.expectedFollowers}</p>
+                  <p className="text-slate-500 font-medium text-sm">Followers</p>
+                </div>
+                <div className="bg-slate-50 px-8 py-3 rounded-2xl border border-slate-100 min-w-[140px]">
+                  <p className="text-2xl font-bold text-slate-900">{profile.expectedFollowing}</p>
+                  <p className="text-slate-500 font-medium text-sm">Following</p>
+                </div>
+                <button 
+                  onClick={handleFollow}
+                  className={`px-12 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-95 ${
+                    profile.isFollowing
+                      ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/30'
+                  }`}
+                >
+                  {profile.isFollowing ? 'Following' : 'Follow'}
+                </button>
+              </div>
+              <p className="text-sm font-semibold text-slate-400 mt-4">Points: {profile.points}</p>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-6">
-             <h3 className="font-semibold text-slate-900 mb-2">About</h3>
-             <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-               {profile.description || "This user hasn't written a description yet."}
-             </p>
+          {/* Tabs */}
+          <div className="border-b border-slate-100 mb-8 overflow-x-auto">
+            <div className="flex gap-8">
+              {['About', 'Activity', 'Upvotes'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`pb-4 px-2 font-bold text-lg transition-all relative whitespace-nowrap ${
+                    activeTab === tab ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {tab}
+                  {activeTab === tab && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full shadow-sm shadow-blue-600/50"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {activeTab === 'About' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 text-slate-600">
+                  <div className="p-2 bg-slate-50 rounded-xl">
+                    <Calendar className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900">Joined</span>
+                    <span className="text-slate-500">{joinedDate}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-slate-600">
+                  <div className="p-2 bg-slate-50 rounded-xl">
+                    <MapPin className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900">Location</span>
+                    <span className="text-slate-500">{profile.location || 'New York, USA'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-slate-600">
+                  <div className="p-2 bg-slate-50 rounded-xl">
+                    <Heart className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900">Interests</span>
+                    <span className="text-slate-500">{profile.interests || 'Technology, Gadgets, Social Media'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab !== 'About' && (
+              <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                 <p className="text-slate-400 font-medium">No {activeTab.toLowerCase()} data available yet.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
