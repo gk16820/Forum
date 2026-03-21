@@ -1,1 +1,8 @@
 temporary
+0  - magenta
+50 - cayan Blue
+100 - Orange
+500 - Green
+1k - Indigo
+
+Color combo for likes

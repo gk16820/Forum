@@ -10,11 +10,19 @@ export const Home = () => {
   const { token } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
-  const [newTags, setNewTags] = useState('');
+  const [newCategories, setNewCategories] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [newImage, setNewImage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('New');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  const AVAILABLE_CATEGORIES = [
+    'Career guidance', 'Placement preparation', 'GUVI Courses', 
+    'Learning resourses', 'General advise', 'Debugging/Troubleshooting', 
+    'Tools Suggestion'
+  ];
 
   const fetchPosts = async () => {
     try {
@@ -52,7 +60,6 @@ export const Home = () => {
     }
     
     try {
-      const parsedTags = newTags.split(',').map(tag => tag.trim()).filter(t => t.length > 0);
       await fetch('http://localhost:3000/api/posts', {
         method: 'POST',
         headers: { 
@@ -60,16 +67,17 @@ export const Home = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
-          title: 'Question', 
+          title: newTitle || 'Question', 
           question: newQuestion, 
-          tags: parsedTags,
+          categories: newCategories,
           domain: newDomain,
           image: newImage 
         })
       });
       setIsCreatingPost(false);
+      setNewTitle('');
       setNewQuestion('');
-      setNewTags('');
+      setNewCategories([]);
       setNewDomain('');
       setNewImage(null);
       fetchPosts();
@@ -95,27 +103,63 @@ export const Home = () => {
       
       <div className="flex-1 py-6 lg:px-8 min-w-0">
         {isCreatingPost ? (
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 animate-in slide-in-from-top-4 fade-in duration-200">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Ask a Question</h2>
+          <div className="bg-surface p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 animate-in slide-in-from-top-4 fade-in duration-200">
+            <h2 className="text-xl font-bold text-primary mb-4">Ask a Question</h2>
+            <input 
+              type="text"
+              placeholder="Question Title (Required)" 
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              className="w-full mb-3 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none font-bold text-lg"
+            />
             <textarea 
-              placeholder="What's your question?" 
+              placeholder="Explain your question in detail..." 
               rows={5}
               value={newQuestion}
               onChange={e => setNewQuestion(e.target.value)}
-              className="w-full mb-4 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+              className="w-full mb-4 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none resize-none"
             />
             <div className="flex gap-4 mb-4">
               <div className="flex-1">
                 <DomainSelect value={newDomain} onChange={setNewDomain} required placeholder="Select a Domain (Required)" className="!py-3" />
               </div>
-              <div className="flex-1">
-                <input 
-                  type="text" 
-                  placeholder="Tags (comma separated, optional)" 
-                  value={newTags}
-                  onChange={e => setNewTags(e.target.value)}
-                  className="w-full h-full px-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+              <div className="flex-1 relative">
+                <button 
+                  type="button"
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className="w-full h-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none text-left flex justify-between items-center text-slate-500 font-medium"
+                >
+                  <span className="truncate">
+                    {newCategories.length > 0 
+                      ? `${newCategories.length} Categories selected` 
+                      : 'Select Categories'}
+                  </span>
+                  <span className="text-[10px] transform transition-transform duration-200">▼</span>
+                </button>
+                
+                {showCategoryDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-1">
+                    {AVAILABLE_CATEGORIES.map(cat => (
+                      <label key={cat} className="flex items-center px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0 group">
+                        <input 
+                          type="checkbox" 
+                          checked={newCategories.includes(cat)}
+                          onChange={() => {
+                            if (newCategories.includes(cat)) {
+                              setNewCategories(newCategories.filter(c => c !== cat));
+                            } else {
+                              setNewCategories([...newCategories, cat]);
+                            }
+                          }}
+                          className="mr-3 h-4 w-4 rounded border-slate-300 text-accent-600 focus:ring-accent-500 transition-all cursor-pointer"
+                        />
+                        <span className={`text-sm font-medium ${newCategories.includes(cat) ? 'text-accent-600' : 'text-slate-600'} group-hover:text-primary transition-colors`}>
+                          {cat}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             {newImage && (
@@ -126,7 +170,7 @@ export const Home = () => {
             )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <label className="cursor-pointer flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-slate-50">
+                <label className="cursor-pointer flex items-center gap-2 text-slate-500 hover:text-accent-600 transition-colors px-3 py-2 rounded-lg hover:bg-slate-50">
                   <ImagePlus className="w-5 h-5" />
                   <span className="text-sm font-medium">Attach Image</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
@@ -141,7 +185,7 @@ export const Home = () => {
                 </button>
                 <button 
                   onClick={handleCreatePost}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors shadow-md shadow-blue-500/20"
+                  className="bg-accent-600 hover:bg-accent-700 text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors shadow-md shadow-accent-600/20"
                 >
                   Publish Post
                 </button>
@@ -150,13 +194,13 @@ export const Home = () => {
           </div>
         ) : (
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Recent Discussions</h1>
+            <h1 className="text-2xl font-bold text-primary tracking-tight">Recent Discussions</h1>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500 font-medium">Sort by:</span>
+              <span className="text-sm text-secondary font-medium">Sort by:</span>
               <select 
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-sm font-semibold text-slate-900 border-none focus:ring-0 cursor-pointer outline-none"
+                className="bg-transparent text-sm font-semibold text-primary border-none focus:ring-0 cursor-pointer outline-none"
               >
                 <option value="Popular">Popular</option>
                 <option value="New">New</option>

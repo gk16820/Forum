@@ -37,12 +37,12 @@ export const Tags = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {tags.map(t => (
-              <Link key={t.tag} to={`/search?q=${encodeURIComponent('#' + t.tag)}`} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all group">
+              <Link key={t.tag} to={`/search?q=${encodeURIComponent('#' + t.tag)}`} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-600 transition-all group">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                     <Hash className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors truncate">
+                  <h3 className="font-bold text-slate-900 text-lg truncate">
                     {t.tag}
                   </h3>
                 </div>

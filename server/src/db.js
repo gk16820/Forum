@@ -143,6 +143,9 @@ export async function initDb() {
     await db.run('ALTER TABLE posts ADD COLUMN communityId INTEGER DEFAULT NULL');
   } catch (err) {}
   try {
+    await db.run('ALTER TABLE posts ADD COLUMN categories TEXT DEFAULT "[]"');
+  } catch (err) {}
+  try {
     await db.run('CREATE TABLE IF NOT EXISTS bookmark_lists (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, name TEXT, UNIQUE(userId, name))').catch(() => {});
   } catch (err) {}
 

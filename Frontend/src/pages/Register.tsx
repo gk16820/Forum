@@ -40,18 +40,18 @@ export const Register = () => {
     }
   };
 
-  const inputClass = "appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 sm:text-sm transition-colors";
+  const inputClass = "appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-400 text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 sm:text-sm transition-colors";
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl border border-slate-200 shadow-xl">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-surface p-10 rounded-2xl border border-slate-200 shadow-xl">
         <div>
-          <h2 className="mt-4 text-center text-3xl font-extrabold text-slate-900">
+          <h2 className="mt-4 text-center text-3xl font-extrabold text-primary">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-500">
+          <p className="mt-2 text-center text-sm text-secondary">
             Already have one?{' '}
-            <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500">Sign in</Link>
+            <Link to="/login" className="font-semibold text-brand-600 hover:text-brand-500">Sign in</Link>
           </p>
         </div>
 
@@ -115,10 +115,10 @@ export const Register = () => {
           </div>
 
           <div className="pt-2">
-            <label className="flex items-center space-x-2 text-sm text-slate-700">
+            <label className="flex items-center space-x-2 text-sm text-secondary">
               <input
                 type="checkbox"
-                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-brand-600 border-slate-300 rounded focus:ring-brand-500"
                 checked={isGuviFaculty}
                 onChange={(e) => setIsGuviFaculty(e.target.checked)}
               />
@@ -129,7 +129,7 @@ export const Register = () => {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-md shadow-blue-600/20"
+              className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors shadow-md shadow-brand-600/20"
             >
               Create Account
             </button>

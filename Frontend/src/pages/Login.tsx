@@ -32,13 +32,13 @@ export const Login = () => {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl border border-slate-200 shadow-xl">
+      <div className="max-w-md w-full space-y-8 bg-surface p-10 rounded-2xl border border-slate-200 shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-primary">
             Welcome back
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-600">
-            Or <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">create a new account</Link>
+          <p className="mt-2 text-center text-sm text-secondary">
+            Or <Link to="/register" className="font-medium text-accent-600 hover:text-accent-500">create a new account</Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -48,7 +48,7 @@ export const Login = () => {
               <input
                 type="email"
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-primary rounded-xl focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -58,7 +58,7 @@ export const Login = () => {
               <input
                 type="password"
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-primary rounded-xl focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -69,7 +69,7 @@ export const Login = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-accent-600 hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 transition-colors"
             >
               Sign in
             </button>

@@ -12,7 +12,7 @@ const formatContentWithMentions = (question: string) => {
   const parts = question.split(/(@\w+|#\w+)/g);
   return parts.map((part, i) => {
     if (part.startsWith('@')) {
-      return <span key={i} className="text-blue-600 font-semibold cursor-pointer hover:underline">{part}</span>;
+      return <span key={i} className="text-accent-600 font-semibold cursor-pointer hover:underline">{part}</span>;
     }
     if (part.startsWith('#')) {
       return <span key={i} className="text-purple-600 font-semibold cursor-pointer hover:underline">{part}</span>;
@@ -135,7 +135,7 @@ export const PostDetail = () => {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex min-h-screen bg-white">
       <Sidebar />
       <div className="flex-1 py-6 lg:px-8 min-w-0">
-        <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-green-600 transition-colors mb-4 group text-sm font-medium">
+        <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-accent-600 transition-colors mb-4 group text-sm font-medium">
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to feed
         </Link>
 
@@ -144,10 +144,10 @@ export const PostDetail = () => {
           <div className="flex items-start gap-5">
             {/* Voting */}
             <div className="flex flex-col items-center bg-slate-50 p-2 rounded-xl border border-slate-100 flex-shrink-0">
-              <button onClick={() => handleVote('up')} className={`p-1.5 rounded-md hover:bg-slate-200 transition-colors ${voteStatus === 'up' ? 'text-green-600' : 'text-slate-400'}`}>
+              <button onClick={() => handleVote('up')} className={`p-1.5 rounded-md hover:bg-slate-200 transition-colors ${voteStatus === 'up' ? 'text-royal-purple' : 'text-slate-400'}`}>
                 <ChevronUp className="h-6 w-6" />
               </button>
-              <span className={`font-bold text-lg my-2 ${voteStatus === 'up' ? 'text-green-600' : voteStatus === 'down' ? 'text-red-600' : 'text-slate-700'}`}>
+              <span className={`font-bold text-lg my-2 ${voteStatus === 'up' ? 'text-royal-purple' : voteStatus === 'down' ? 'text-red-600' : 'text-slate-700'}`}>
                 {upvotes}
               </span>
               <button onClick={() => handleVote('down')} className={`p-1.5 rounded-md hover:bg-slate-200 transition-colors ${voteStatus === 'down' ? 'text-red-600' : 'text-slate-400'}`}>
@@ -159,7 +159,7 @@ export const PostDetail = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-4">
                 {post.domain && (
-                  <span className="inline-block px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-lg text-sm font-bold">
+                  <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-sm font-bold shadow-sm shadow-accent-500/5">
                     {post.domain}
                   </span>
                 )}
@@ -186,7 +186,7 @@ export const PostDetail = () => {
               
               <div className="flex items-center gap-2 mb-8 flex-wrap">
                 {post.tags?.map((tag: string) => (
-                  <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">
+                  <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
                     #{tag}
                   </span>
                 ))}
@@ -201,7 +201,7 @@ export const PostDetail = () => {
                   <div className="text-left">
                     <p className="text-xs text-slate-500 mb-0.5">Asked {post.createdAt ? formatDistanceToNow(new Date(post.createdAt + 'Z'), { addSuffix: true }) : 'Just now'}</p>
                     <UserHoverCard userId={post.author.id}>
-                      <span className="text-sm font-bold text-green-600 hover:underline cursor-pointer">{post.author.name}</span>
+                      <span className="text-sm font-bold text-accent-600 hover:underline cursor-pointer">{post.author.name}</span>
                     </UserHoverCard>
                   </div>
                 </div>
@@ -209,7 +209,7 @@ export const PostDetail = () => {
                 {!isAnswering && (
                   <button 
                     onClick={() => setIsAnswering(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-500/20"
+                    className="bg-accent-600 hover:bg-accent-700 text-white font-bold py-3 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-accent-500/20"
                   >
                     Answer this
                   </button>
@@ -220,7 +220,7 @@ export const PostDetail = () => {
               {isAnswering && (
                 <div className="mt-8 pt-8 border-t border-slate-100 animate-in slide-in-from-top-4 duration-300">
                   <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-green-600" /> 
+                    <MessageSquare className="w-5 h-5 text-accent-600" /> 
                     Provide your answer inbox
                   </h3>
                   <textarea 
@@ -229,7 +229,7 @@ export const PostDetail = () => {
                     placeholder="Type your detailed answer here..." 
                     value={newComment}
                     onChange={e => setNewComment(e.target.value)}
-                    className="w-full text-base p-4 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-slate-50 mb-4 resize-y font-sans shadow-inner"
+                    className="w-full text-base p-4 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 bg-slate-50 mb-4 resize-y font-sans shadow-inner"
                   />
                   <div className="flex justify-end gap-3">
                     <button 
@@ -240,7 +240,7 @@ export const PostDetail = () => {
                     </button>
                     <button 
                       onClick={handleSubmitAnswer}
-                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-8 rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-green-500/20"
+                      className="bg-accent-600 hover:bg-accent-700 text-white font-bold py-2.5 px-8 rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-accent-500/20"
                     >
                       Post Answer
                     </button>
@@ -276,7 +276,7 @@ export const PostDetail = () => {
                     <div className="text-left">
                       <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-0.5">Answered {formatDistanceToNow(new Date(comment.createdAt + 'Z'), { addSuffix: true })}</p>
                       <UserHoverCard userId={comment.author.id}>
-                        <span className="text-sm font-bold text-slate-900 hover:text-green-600 transition-colors cursor-pointer">{comment.author.name}</span>
+                        <span className="text-sm font-bold text-slate-900 hover:text-accent-600 transition-colors cursor-pointer">{comment.author.name}</span>
                       </UserHoverCard>
                     </div>
                   </div>

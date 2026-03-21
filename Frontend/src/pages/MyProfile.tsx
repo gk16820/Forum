@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Calendar, Heart, Briefcase, Globe, MessageSquare, PenSquare } from 'lucide-react';
 import { format } from 'date-fns';
+import { X } from 'lucide-react';
 import { PostCard } from '../components/PostCard';
-import { UserHoverCard } from '../components/UserHoverCard';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from '../components/Sidebar';
@@ -18,6 +18,18 @@ export const MyProfile = () => {
   const [myUpvotes, setMyUpvotes] = useState<any[]>([]);
   const [myReplies, setMyReplies] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
+  const [modalType, setModalType] = useState<'Followers' | 'Following' | null>(null);
+  const [modalData, setModalData] = useState<any[]>([]);
+
+  const fetchModalData = async (type: 'Followers' | 'Following') => {
+    setModalType(type);
+    setModalData([]); // Loading state
+    try {
+      const endpoint = type === 'Followers' ? '/api/users/me/followers' : '/api/users/me/following';
+      const res = await fetch(`http://localhost:3000${endpoint}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setModalData(await res.json());
+    } catch(e) { setModalData([]); }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -50,7 +62,7 @@ export const MyProfile = () => {
           <button
             onClick={() => navigate('/my-profile/edit')}
             title="Edit Profile"
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400 hover:text-green-600 group"
+            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400 hover:text-accent-600 group"
           >
             <Pencil className="h-4 w-4 group-hover:scale-110 transition-transform" />
           </button>
@@ -65,7 +77,7 @@ export const MyProfile = () => {
                 className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-white shadow-xl object-cover"
                 alt={user.username}
               />
-              <div className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+              <div className="absolute bottom-4 right-4 w-6 h-6 bg-accent-500 border-4 border-white rounded-full"></div>
             </div>
 
             <div className="flex-1 pt-4">
@@ -83,27 +95,32 @@ export const MyProfile = () => {
               <p className="text-slate-600 text-base leading-relaxed max-w-2xl mb-8">
                 {user.description || (
                   <span className="italic text-slate-400">
-                    No description yet. <button onClick={() => navigate('/my-profile/edit')} className="text-green-600 underline">Add one</button>
+                    No description yet. <button onClick={() => navigate('/my-profile/edit')} className="text-accent-600 underline">Add one</button>
                   </span>
                 )}
               </p>
 
               {profile && (
                 <div className="flex flex-wrap items-center gap-4 mb-4">
-                  <div className="bg-green-50 px-8 py-3 rounded-2xl border border-green-100 min-w-[140px]">
-                    <p className="text-2xl font-bold text-slate-900">{profile.expectedFollowers || 0}</p>
+                  <button 
+                    onClick={() => fetchModalData('Followers')}
+                    className="bg-accent-50 px-8 py-3 rounded-2xl border border-accent-100 min-w-[140px] text-left hover:bg-accent-100 transition-colors group"
+                  >
+                    <p className="text-2xl font-bold text-slate-900 group-hover:text-accent-600 transition-colors">{profile.expectedFollowers || 0}</p>
                     <p className="text-slate-500 font-medium text-sm">Followers</p>
-                  </div>
-                  <div className="bg-green-50 px-8 py-3 rounded-2xl border border-green-100 min-w-[140px]">
-                    <p className="text-2xl font-bold text-slate-900">{profile.expectedFollowing || 0}</p>
+                  </button>
+                  <button 
+                    onClick={() => fetchModalData('Following')}
+                    className="bg-accent-50 px-8 py-3 rounded-2xl border border-accent-100 min-w-[140px] text-left hover:bg-accent-100 transition-colors group"
+                  >
+                    <p className="text-2xl font-bold text-slate-900 group-hover:text-accent-600 transition-colors">{profile.expectedFollowing || 0}</p>
                     <p className="text-slate-500 font-medium text-sm">Following</p>
-                  </div>
+                  </button>
                 </div>
               )}
 
               <div className="flex items-center gap-6 mt-4">
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Points: <span className="text-green-600 ml-1 font-extrabold">{profile?.points ?? user.points ?? 0}</span></p>
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">User Type: <span className="text-slate-600 ml-1 capitalize">{user.userType || 'Common User'}</span></p>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Points: <span className="text-accent-600 ml-1 font-extrabold">{profile?.points ?? user.points ?? 0}</span></p>
               </div>
             </div>
           </div>
@@ -116,12 +133,12 @@ export const MyProfile = () => {
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`pb-4 px-2 font-bold text-lg transition-all relative whitespace-nowrap ${
-                    activeTab === tab ? 'text-green-600' : 'text-slate-400 hover:text-slate-600'
+                    activeTab === tab ? 'text-accent-600' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
                   {tab}
                   {activeTab === tab && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-600 rounded-t-full"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent-600 rounded-t-full"></div>
                   )}
                 </button>
               ))}
@@ -133,20 +150,26 @@ export const MyProfile = () => {
             {activeTab === 'About' && (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                  <button 
+                    onClick={() => setActiveTab('Activity')}
+                    className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 text-left hover:bg-slate-100 transition-all group"
+                  >
                     <div className="flex items-center gap-4 mb-1">
-                      <div className="p-2 bg-white rounded-xl shadow-sm"><PenSquare className="h-5 w-5 text-green-600" /></div>
+                      <div className="p-2 bg-white rounded-xl shadow-sm"><PenSquare className="h-5 w-5 text-accent-600" /></div>
                       <span className="font-bold text-slate-900 uppercase text-xs tracking-widest">Questions Posted</span>
                     </div>
-                    <p className="text-3xl font-extrabold text-slate-900 ml-12">{profile?.postsCount || 0}</p>
-                  </div>
-                  <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                    <p className="text-3xl font-extrabold text-slate-900 ml-12">{myPosts.length}</p>
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('Activity')}
+                    className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 text-left hover:bg-slate-100 transition-all group"
+                  >
                     <div className="flex items-center gap-4 mb-1">
-                      <div className="p-2 bg-white rounded-xl shadow-sm"><MessageSquare className="h-5 w-5 text-green-600" /></div>
+                      <div className="p-2 bg-white rounded-xl shadow-sm"><MessageSquare className="h-5 w-5 text-accent-600" /></div>
                       <span className="font-bold text-slate-900 uppercase text-xs tracking-widest">Replies Provided</span>
                     </div>
-                    <p className="text-3xl font-extrabold text-slate-900 ml-12">{profile?.repliesCount || 0}</p>
-                  </div>
+                    <p className="text-3xl font-extrabold text-slate-900 ml-12">{myReplies.length}</p>
+                  </button>
                 </div>
 
                 <div className="space-y-6 pt-4 border-t border-slate-50">
@@ -158,22 +181,7 @@ export const MyProfile = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-slate-50 rounded-xl"><Briefcase className="h-5 w-5 text-slate-400" /></div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900">Role</span>
-                      <span className="text-slate-500">{user.role || <span className="italic text-slate-300">Not set</span>}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-slate-50 rounded-xl"><Globe className="h-5 w-5 text-slate-400" /></div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900">Domain</span>
-                      <span className="text-slate-500">{user.domain || <span className="italic text-slate-300">Not set</span>}</span>
-                    </div>
-                  </div>
-
+                  
                   {user.interests && (
                     <div className="flex items-center gap-4">
                       <div className="p-2.5 bg-slate-50 rounded-xl"><Heart className="h-5 w-5 text-slate-400" /></div>
@@ -207,7 +215,7 @@ export const MyProfile = () => {
                       key={sub}
                       onClick={() => setActivityTab(sub === 'Replies' ? 'My Replies' : sub)}
                       className={`px-6 py-2 rounded-full text-sm font-bold transition-colors ${
-                        (activityTab === sub || (sub === 'Replies' && activityTab === 'My Replies')) ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        (activityTab === sub || (sub === 'Replies' && activityTab === 'My Replies')) ? 'bg-accent-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
                       {sub}
@@ -243,7 +251,7 @@ export const MyProfile = () => {
                             {reply.post.title || reply.post.question}
                           </h3>
                         </Link>
-                        <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
+                        <div className="bg-accent-50/50 p-4 rounded-xl border border-accent-100">
                           <p className="text-slate-800 text-sm whitespace-pre-wrap leading-relaxed">{reply.content}</p>
                         </div>
                       </div>
@@ -256,6 +264,39 @@ export const MyProfile = () => {
         </div>
       </div>
       <RightSidebar />
+
+      {/* Followers/Following Modal */}
+      {modalType && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[100] backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white p-6 rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center mb-6 px-2">
+              <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">{modalType}</h3>
+              <button 
+                onClick={() => setModalType(null)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                title="Close"
+              >
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto pr-2 custom-scrollbar space-y-4">
+              {modalData.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 font-medium italic">No users found.</div>
+              ) : modalData.map(u => (
+                <div key={u.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:bg-slate-100 transition-colors group cursor-pointer"
+                     onClick={() => { navigate(`/user/${u.id}`); setModalType(null); }}>
+                  <img src={u.avatar} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate group-hover:text-accent-600 transition-colors uppercase text-sm tracking-wide">{u.username}</p>
+                    <p className="text-xs text-slate-500 font-medium truncate">{u.role || 'Member'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

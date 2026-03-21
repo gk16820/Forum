@@ -51,6 +51,7 @@ export const getPosts = async (req, res) => {
       comments: row.comments,
       domain: row.domain || '',
       image: row.image || '',
+      categories: JSON.parse(row.categories || '[]'),
       userVote: req.user ? (userVotes[row.id] || null) : null,
       isBookmarked: req.user ? userBookmarks.has(row.id) : false
     }));
@@ -102,6 +103,7 @@ export const getPostById = async (req, res) => {
       comments: row.comments,
       domain: row.domain || '',
       image: row.image || '',
+      categories: JSON.parse(row.categories || '[]'),
       userVote,
       isBookmarked
     });
@@ -119,8 +121,8 @@ export const createPost = async (req, res) => {
     }
 
     const result = await db.run(
-      'INSERT INTO posts (userId, title, question, tags, domain, image, communityId) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [req.user.id, title, question, JSON.stringify(tags || []), domain || '', image || '', communityId || null]
+      'INSERT INTO posts (userId, title, question, tags, domain, image, communityId, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.user.id, title, question, JSON.stringify(tags || []), domain || '', image || '', communityId || null, JSON.stringify(req.body.categories || [])]
     );
     
     // Award user points for posting
@@ -147,6 +149,7 @@ export const updatePost = async (req, res) => {
     if (tags !== undefined) { updateFields.push('tags = ?'); params.push(JSON.stringify(tags)); }
     if (domain !== undefined) { updateFields.push('domain = ?'); params.push(domain); }
     if (image !== undefined) { updateFields.push('image = ?'); params.push(image); }
+    if (req.body.categories !== undefined) { updateFields.push('categories = ?'); params.push(JSON.stringify(req.body.categories)); }
     
     if (updateFields.length > 0) {
       params.push(id);

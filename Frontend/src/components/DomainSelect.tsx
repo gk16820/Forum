@@ -33,7 +33,7 @@ export const DomainSelect = ({
   placeholder = 'Select your domain',
 }: DomainSelectProps) => {
   const baseClass =
-    'w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-800 bg-white appearance-none';
+    'w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-primary bg-surface appearance-none';
 
   return (
     <div className="relative">

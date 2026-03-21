@@ -51,7 +51,7 @@ export const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
         {children}
       </div>
 
-      {isHovering && (
+      {isHovering && !isSelf && (
         <div 
           onClick={(e) => e.stopPropagation()}
           className="absolute z-50 left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-4 animate-in fade-in slide-in-from-top-2 duration-200"
@@ -62,14 +62,14 @@ export const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
                 <img src={profile.avatar} alt="" className="w-12 h-12 rounded-full border border-slate-100 object-cover shrink-0" />
                 <div className="flex-1 min-w-0">
                   <h4
-                    className="font-bold text-slate-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                    className="font-bold text-primary truncate cursor-pointer hover:text-brand-600 transition-colors"
                     onClick={() => navigate(`/user/${userId}`)}
                   >
                     {profile.username}
                   </h4>
-                  {(profile.role || profile.domain || profile.userType === 'guvi faculty') && (
-                    <p className="text-xs font-semibold text-blue-600 mt-0.5 truncate">
-                      {[profile.userType === 'guvi faculty' ? 'GUVI Faculty' : null, profile.role, profile.domain].filter(Boolean).join(' · ')}
+                  {(profile.role || profile.domain) && (
+                    <p className="text-xs font-semibold text-brand-600 mt-0.5 truncate">
+                      {[profile.role, profile.domain].filter(Boolean).join(' · ')}
                     </p>
                   )}
                   <div className="text-xs text-slate-400 mt-0.5">

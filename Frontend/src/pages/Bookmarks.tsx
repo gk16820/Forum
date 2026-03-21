@@ -1,4 +1,5 @@
 import { Sidebar } from '../components/Sidebar';
+import { Check } from 'lucide-react';
 import { RightSidebar } from '../components/RightSidebar';
 import { PostCard } from '../components/PostCard';
 import { useState, useEffect } from 'react';
@@ -98,7 +99,7 @@ export const Bookmarks = () => {
                   onClick={() => setActiveCategory(cat)}
                   className={`px-6 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap border-2 ${
                     activeCategory === cat 
-                      ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-500/20' 
+                      ? 'bg-navy-blue border-navy-blue text-white shadow-lg shadow-navy-blue/20' 
                       : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'
                   }`}
                 >
@@ -112,19 +113,27 @@ export const Bookmarks = () => {
               </div>
             ))}
             {isCreatingList ? (
-              <input 
-                type="text"
-                autoFocus
-                value={newListInput}
-                onChange={e => setNewListInput(e.target.value)}
-                onBlur={() => !newListInput.trim() && setIsCreatingList(false)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleCreateInline();
-                  if (e.key === 'Escape') setIsCreatingList(false);
-                }}
-                placeholder="List name..."
-                className="px-6 py-2 font-bold text-sm rounded-xl bg-slate-50 border-2 border-green-500 focus:outline-none focus:ring-4 focus:ring-green-500/10 w-44 shadow-sm animate-in zoom-in-95 duration-200"
-              />
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text"
+                  autoFocus
+                  value={newListInput}
+                  onChange={e => setNewListInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleCreateInline();
+                    if (e.key === 'Escape') setIsCreatingList(false);
+                  }}
+                  placeholder="List name..."
+                  className="px-6 py-2 font-bold text-sm rounded-xl bg-slate-50 border-2 border-navy-blue focus:outline-none focus:ring-4 focus:ring-navy-blue/10 w-44 shadow-sm animate-in zoom-in-95 duration-200"
+                />
+                <button 
+                  onClick={handleCreateInline}
+                  className="p-2 bg-navy-blue text-white rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
+                  title="Save List"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+              </div>
             ) : (
               <button 
                 onClick={() => setIsCreatingList(true)}
