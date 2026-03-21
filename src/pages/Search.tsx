@@ -3,21 +3,30 @@ import { useLocation, Link } from 'react-router-dom';
 import { PostCard } from '../components/PostCard';
 import { Search as SearchIcon, Users, ArrowLeft } from 'lucide-react';
 import { UserHoverCard } from '../components/UserHoverCard';
+import { DomainSelect } from '../components/DomainSelect';
+import { Sidebar } from '../components/Sidebar';
+import { RightSidebar } from '../components/RightSidebar';
 
 export const Search = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search).get('q') || '';
+  const initialDomain = new URLSearchParams(location.search).get('domain') || '';
+  const initialStatus = new URLSearchParams(location.search).get('status') || '';
+  const searchType = new URLSearchParams(location.search).get('type') || 'posts';
+  
+  const [domain, setDomain] = useState(initialDomain);
+  const [status, setStatus] = useState(initialStatus);
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchResults = async () => {
-      if (!query.trim()) return;
+      if (!query.trim() && !domain) return;
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(query)}&domain=${encodeURIComponent(domain)}&status=${encodeURIComponent(status)}&type=${encodeURIComponent(searchType)}`);
         if (res.ok) {
           const data = await res.json();
           setResults(data);
@@ -32,24 +41,62 @@ export const Search = () => {
     };
 
     fetchResults();
-  }, [query]);
+  }, [query, domain, status, searchType]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-4 group text-sm font-medium">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
+      <Sidebar />
+      <div className="flex-1 py-6 lg:px-8 min-w-0">
+        <div className="mb-8">
+          <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-4 group text-sm font-medium">
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back to feed
         </Link>
-        <div className="flex items-end gap-3">
-          <div className="p-3 bg-blue-100 rounded-2xl">
-            <SearchIcon className="h-6 w-6 text-blue-600" />
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="flex items-end gap-3">
+            <div className="p-3 bg-blue-100 rounded-2xl">
+              <SearchIcon className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Search Results</h1>
+              <p className="text-slate-500 text-sm mt-1">
+                {query ? (
+                  <>Showing results for <span className="text-blue-600 font-bold">"{query}"</span> {domain && `in ${domain}`} {status && `(${status})`}</>
+                ) : (
+                  <>Browsing {domain ? `in ${domain}` : 'All Posts'} {status && `(${status})`}</>
+                )}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 leading-tight">Search Results</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Showing results for <span className="text-blue-600 font-bold">"{query}"</span>
-            </p>
+          
+          <div className="flex bg-white p-3 rounded-2xl border border-slate-200 shadow-sm gap-4 items-end flex-wrap w-full sm:w-auto mt-4 sm:mt-0">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">
+                Domain Filter
+              </label>
+              <DomainSelect 
+                value={domain} 
+                onChange={setDomain} 
+                placeholder="All Domains" 
+                className="py-2.5 text-sm font-semibold rounded-xl bg-slate-50 border-slate-200"
+              />
+            </div>
+            {query && !query.startsWith('@') && searchType !== 'users' && (
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">
+                  Status
+                </label>
+                <select 
+                  value={status} 
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-slate-800 bg-slate-50 text-sm font-semibold pr-10 appearance-none"
+                >
+                  <option value="">All Status</option>
+                  <option value="answered">Answered</option>
+                  <option value="unanswered">Unanswered</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -116,6 +163,8 @@ export const Search = () => {
             <p className="text-slate-400 italic">Enter a search query in the navbar above.</p>
          </div>
       )}
-    </div>
+      </div>
+      <RightSidebar />
+    </main>
   );
 };

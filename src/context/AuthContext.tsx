@@ -5,10 +5,12 @@ type User = {
   username: string;
   avatar: string;
   role?: string;
+  domain?: string;
   description?: string;
   points?: number;
   location?: string;
   interests?: string;
+  userType?: string;
 };
 
 interface AuthContextType {

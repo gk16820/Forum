@@ -1,23 +1,40 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Search, Bell, PenSquare, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Search, Bell, PenSquare, LogOut, LogIn, UserPlus, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { DomainSelect } from './DomainSelect';
+import { UserHoverCard } from './UserHoverCard';
 
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchDomain, setSearchDomain] = useState('');
+  const [searchStatus, setSearchStatus] = useState('');
+  const searchRef = useRef<HTMLDivElement>(null);
+
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchNotifications = async () => {
     if (!user) return;
     try {
       const res = await fetch('http://localhost:3000/api/notifications', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('forum_token')}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
         setNotifications(await res.json());
@@ -39,7 +56,7 @@ export const Navbar = () => {
     try {
       await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('forum_token')}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: 1 } : n));
     } catch (e) {
@@ -49,9 +66,19 @@ export const Navbar = () => {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  const handleSearchSubmit = () => {
+    if (!searchQuery.trim() && !searchDomain && !searchStatus) return;
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.append('q', searchQuery.trim());
+    if (searchDomain) params.append('domain', searchDomain);
+    if (searchStatus) params.append('status', searchStatus);
+    setIsSearchFocused(false);
+    navigate(`/search?${params.toString()}`);
+  };
+
   const handleSearch = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
     }
   };
 
@@ -73,7 +100,7 @@ export const Navbar = () => {
           </Link>
           
           <div className="flex-1 max-w-2xl px-8 hidden md:block">
-            <div className="relative group">
+            <div className="relative group" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
               </div>
@@ -82,9 +109,53 @@ export const Navbar = () => {
                 className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all sm:text-sm" 
                 placeholder="Search discussions, tags, or people..." 
                 value={searchQuery}
+                onFocus={() => setIsSearchFocused(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearch}
               />
+              
+              {/* Advanced Search Dropdown */}
+              {isSearchFocused && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 p-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2 mb-4 text-sm font-bold text-slate-700">
+                    <SlidersHorizontal className="w-4 h-4" /> Advanced Filters
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Domain filter</label>
+                      <DomainSelect 
+                        value={searchDomain} 
+                        onChange={setSearchDomain} 
+                        placeholder="Any Domain" 
+                        className="!py-2 !text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-2">Question Status</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                          <input type="radio" checked={searchStatus === ''} onChange={() => setSearchStatus('')} className="text-blue-600 focus:ring-blue-500" />
+                          All
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                          <input type="radio" checked={searchStatus === 'answered'} onChange={() => setSearchStatus('answered')} className="text-blue-600 focus:ring-blue-500" />
+                          Answered
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                          <input type="radio" checked={searchStatus === 'unanswered'} onChange={() => setSearchStatus('unanswered')} className="text-blue-600 focus:ring-blue-500" />
+                          Unanswered
+                        </label>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={handleSearchSubmit}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-colors mt-2"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -132,7 +203,7 @@ export const Navbar = () => {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm text-slate-900 leading-snug">
                                   <span className="font-bold">{n.actorName}</span>{' '}
-                                  {n.type === 'follow' ? 'started following you' : 'commented on your post'}
+                                  {n.type === 'follow' ? 'started following you' : n.type === 'mention' ? 'mentioned you in a comment' : 'commented on your post'}
                                 </p>
                                 {n.postTitle && <p className="text-xs text-slate-500 truncate mt-1">"{n.postTitle}"</p>}
                                 <p className="text-[10px] text-slate-400 mt-1">
@@ -147,9 +218,11 @@ export const Navbar = () => {
                     </div>
                   )}
                 </div>
-                <Link to="/my-profile" className="h-8 w-8 rounded-full border-2 border-slate-200 overflow-hidden cursor-pointer hover:border-blue-500 transition-colors">
-                  <img src={user.avatar} alt={user.username} className="h-full w-full object-cover" />
-                </Link>
+                <UserHoverCard userId={user.id}>
+                  <Link to="/my-profile" className="h-8 w-8 rounded-full border-2 border-slate-200 overflow-hidden cursor-pointer hover:border-blue-500 transition-colors block">
+                    <img src={user.avatar} alt={user.username} className="h-full w-full object-cover block" />
+                  </Link>
+                </UserHoverCard>
                 <button 
                   onClick={() => {
                     const event = new CustomEvent('openNewPostModal');

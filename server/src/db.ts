@@ -24,7 +24,7 @@ export async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
       title TEXT NOT NULL,
-      content TEXT NOT NULL,
+      question TEXT NOT NULL,
       tags TEXT NOT NULL,
       upvotes INTEGER DEFAULT 0,
       comments INTEGER DEFAULT 0,
@@ -37,7 +37,7 @@ export async function initDb() {
       postId INTEGER NOT NULL,
       userId INTEGER NOT NULL,
       parentId INTEGER,
-      content TEXT NOT NULL,
+      question TEXT NOT NULL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (postId) REFERENCES posts(id),
       FOREIGN KEY (userId) REFERENCES users(id),
@@ -74,6 +74,33 @@ export async function initDb() {
       FOREIGN KEY (actorId) REFERENCES users(id),
       FOREIGN KEY (postId) REFERENCES posts(id)
     );
+    CREATE TABLE IF NOT EXISTS bookmarks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      postId INTEGER NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(userId, postId),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (postId) REFERENCES posts(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS communities (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT NOT NULL,
+      createdBy INTEGER NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (createdBy) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS community_members (
+      userId INTEGER NOT NULL,
+      communityId INTEGER NOT NULL,
+      joinedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (userId, communityId),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (communityId) REFERENCES communities(id)
+    );
   `);
 
   try {
@@ -84,6 +111,39 @@ export async function initDb() {
   } catch (err) {}
   try {
     await db.run('ALTER TABLE users ADD COLUMN interests TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN role TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN domain TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE posts ADD COLUMN views INTEGER DEFAULT 0');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE posts RENAME COLUMN content TO question');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE comments RENAME COLUMN content TO question');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE bookmarks ADD COLUMN category TEXT DEFAULT "General"');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE posts ADD COLUMN domain TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE posts ADD COLUMN image TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN userType TEXT DEFAULT "commonuser"');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE posts ADD COLUMN communityId INTEGER DEFAULT NULL');
+  } catch (err) {}
+  try {
+    await db.run('CREATE TABLE IF NOT EXISTS bookmark_lists (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, name TEXT, UNIQUE(userId, name))');
   } catch (err) {}
 
   // Seed with an initial user if empty
@@ -96,7 +156,7 @@ export async function initDb() {
     );
 
     await db.run(
-      'INSERT INTO posts (userId, title, content, tags, upvotes) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO posts (userId, title, question, tags, upvotes) VALUES (?, ?, ?, ?, ?)',
       [1, 'Welcome to DevEd Forum v2', 'This is the newly overhauled platform with proper authentication and real dynamic data. Let us know your thoughts.', JSON.stringify(['Announcement', 'Platform']), 10]
     );
   }

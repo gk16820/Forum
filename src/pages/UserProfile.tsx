@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
-import { Calendar, MapPin, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Calendar, Heart, ArrowLeft, MoreHorizontal, Briefcase, Globe, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const UserProfile = () => {
@@ -99,15 +99,19 @@ export const UserProfile = () => {
                   <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">
                     {profile.username}
                   </h1>
-                  <p className="text-lg text-slate-500 font-medium">Content Creator & Tech Enthusiast</p>
+                  {(profile.role || profile.domain) && (
+                    <p className="text-lg text-slate-500 font-medium">
+                      {[profile.role, profile.domain].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
                 </div>
                 <button className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                   <MoreHorizontal className="h-6 w-6 text-slate-400" />
                 </button>
               </div>
 
-              <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mb-8">
-                {profile.description || "Sharing insights on the latest in tech, gadgets, and social media trends. Here to help and engage with the community."}
+              <p className="text-slate-600 text-base leading-relaxed max-w-2xl mb-8">
+                {profile.description || ''}
               </p>
 
               <div className="flex flex-wrap items-center gap-4">
@@ -168,25 +172,53 @@ export const UserProfile = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-slate-600">
-                  <div className="p-2 bg-slate-50 rounded-xl">
-                    <MapPin className="h-5 w-5 text-slate-400" />
+                {profile.role && (
+                  <div className="flex items-center gap-4 text-slate-600">
+                    <div className="p-2 bg-slate-50 rounded-xl">
+                      <Briefcase className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">Role</span>
+                      <span className="text-slate-500">{profile.role}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">Location</span>
-                    <span className="text-slate-500">{profile.location || 'New York, USA'}</span>
+                )}
+
+                {profile.domain && (
+                  <div className="flex items-center gap-4 text-slate-600">
+                    <div className="p-2 bg-slate-50 rounded-xl">
+                      <Globe className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">Domain</span>
+                      <span className="text-slate-500">{profile.domain}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-4 text-slate-600">
+                  <div className="p-2 bg-slate-50 rounded-xl mt-0.5">
+                    <MessageSquare className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 block mb-1">Description</span>
+                    <span className="text-slate-500 leading-relaxed">
+                      {profile.description || 'No description provided.'}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-slate-600">
-                  <div className="p-2 bg-slate-50 rounded-xl">
-                    <Heart className="h-5 w-5 text-slate-400" />
+                {profile.interests && (
+                  <div className="flex items-center gap-4 text-slate-600">
+                    <div className="p-2 bg-slate-50 rounded-xl">
+                      <Heart className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">Interests</span>
+                      <span className="text-slate-500">{profile.interests}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">Interests</span>
-                    <span className="text-slate-500">{profile.interests || 'Technology, Gadgets, Social Media'}</span>
-                  </div>
-                </div>
+                )}
               </div>
             )}
             {activeTab !== 'About' && (

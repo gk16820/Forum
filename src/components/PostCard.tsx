@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreHorizontal, MessageSquare, Share2, Send } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronUp, ChevronDown, MoreHorizontal, MessageSquare, Share2, Bookmark, Eye, Pencil } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { UserHoverCard } from './UserHoverCard';
+import { Link } from 'react-router-dom';
 
-const formatContentWithMentions = (content: string) => {
-  const parts = content.split(/(@\w+)/g);
+const formatContentWithMentions = (question: string) => {
+  if (!question) return null;
+  const parts = question.split(/(@\w+)/g);
   return parts.map((part, i) => {
     if (part.startsWith('@')) {
       return <span key={i} className="text-blue-600 font-semibold cursor-pointer hover:underline">{part}</span>;
@@ -18,32 +20,43 @@ export const PostCard = ({ post }: { post: any }) => {
   const { token, user } = useAuth();
   const [upvotes, setUpvotes] = useState(post.upvotes);
   const [voteStatus, setVoteStatus] = useState<'up' | 'down' | null>(post.userVote || null);
+  const [isVoting, setIsVoting] = useState(false);
+
+  useEffect(() => {
+    setUpvotes(post.upvotes);
+    setVoteStatus(post.userVote || null);
+  }, [post.upvotes, post.userVote]);
   
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState('');
-  const [replyTo, setReplyTo] = useState<number | null>(null);
-  const [showSharePopover, setShowSharePopover] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(post.isBookmarked || false);
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.question);
+  const [editTags, setEditTags] = useState(post.tags?.join(', ') || '');
+  const [questionContent, setQuestionContent] = useState(post.question);
+  const [tagsContent, setTagsContent] = useState<string[]>(post.tags || []);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalInput, setModalInput] = useState('');
+  const [modalType, setModalType] = useState<'initial-bookmark' | 'move'>('initial-bookmark');
+  const [availableLists, setAvailableLists] = useState<string[]>(['General']);
+
+  useEffect(() => {
+    setIsBookmarked(post.isBookmarked || false);
+  }, [post.isBookmarked]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const formattedTime = post.createdAt ? formatDistanceToNow(new Date(post.createdAt + 'Z'), { addSuffix: true }) : 'Just now';
-
-  const fetchComments = async () => {
-    try {
-      const res = await fetch(`http://localhost:3000/api/posts/${post.id}/comments`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const toggleComments = () => {
-    if (!showComments) fetchComments();
-    setShowComments(!showComments);
-  };
 
   const handleVote = async (type: 'up' | 'down') => {
     if (!token) {
@@ -52,59 +65,43 @@ export const PostCard = ({ post }: { post: any }) => {
       return;
     }
     
-    try {
-      const isRemoving = voteStatus === type;
-      let delta = 0;
-      if (isRemoving) {
-        delta = type === 'up' ? -1 : 1;
-        setVoteStatus(null);
-      } else {
-        if (voteStatus) {
-          delta = type === 'up' ? 2 : -2;
-        } else {
-          delta = type === 'up' ? 1 : -1;
-        }
-        setVoteStatus(type);
-      }
-      setUpvotes(upvotes + delta);
+    if (isVoting) return;
+    setIsVoting(true);
 
-      await fetch(`http://localhost:3000/api/posts/${post.id}/vote`, {
+    try {
+       const isRemoving = voteStatus === type;
+       let delta = 0;
+       if (isRemoving) {
+         delta = type === 'up' ? -1 : 1;
+         setVoteStatus(null);
+       } else {
+         if (voteStatus) {
+           delta = type === 'up' ? 2 : -2;
+         } else {
+           delta = type === 'up' ? 1 : -1;
+         }
+         setVoteStatus(type);
+       }
+       setUpvotes((prev: number) => prev + delta);
+
+      const res = await fetch(`http://localhost:3000/api/posts/${post.id}/vote`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ type: isRemoving ? (type === 'up' ? 'down' : 'up') : type })
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleSubmitComment = async () => {
-    if (!token) {
-       alert("Please login to comment");
-       window.location.href = '/login';
-       return;
-    }
-    if (!newComment.trim()) return;
-
-    try {
-      const res = await fetch(`http://localhost:3000/api/posts/${post.id}/comments`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ content: newComment, parentId: replyTo })
+        body: JSON.stringify({ type })
       });
       if (res.ok) {
-        setNewComment('');
-        setReplyTo(null);
-        fetchComments();
+        const data = await res.json();
+        setUpvotes(data.upvotes);
+        setVoteStatus(data.userVote);
       }
     } catch (e) {
-      console.error('Failed to post comment', e);
+      console.error(e);
+    } finally {
+      setIsVoting(true);
+      setTimeout(() => setIsVoting(false), 200); 
     }
   };
 
@@ -113,6 +110,85 @@ export const PostCard = ({ post }: { post: any }) => {
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const openBookmarkModal = async (type: 'initial-bookmark' | 'move') => {
+    try {
+      const res = await fetch('http://localhost:3000/api/bookmarks/lists', {
+         headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableLists(data.filter((l: string) => l !== 'All'));
+      }
+    } catch(e) {}
+    setModalType(type);
+    setModalInput(post.bookmarkCategory || 'General');
+    setModalOpen(true);
+    setShowMoreMenu(false);
+  };
+
+  const handleBookmark = async () => {
+    if (!token) { alert('Please login to bookmark posts'); return; }
+    
+    try {
+      if (isBookmarked) {
+        setIsBookmarked(false);
+        await fetch(`http://localhost:3000/api/bookmarks/${post.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else {
+        await openBookmarkModal('initial-bookmark');
+      }
+    } catch (e) {
+      setIsBookmarked(!isBookmarked); // revert on error
+    }
+    setShowMoreMenu(false);
+  };
+
+  const handleMoveBookmark = async () => {
+    if (!token) return;
+    await openBookmarkModal('move');
+  };
+
+  const handleModalSubmit = async () => {
+    if (!modalInput.trim()) return;
+    try {
+      setIsBookmarked(true);
+      await fetch(`http://localhost:3000/api/bookmarks/${post.id}`, {
+        method: 'POST', 
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: modalInput.trim() })
+      });
+      setModalOpen(false);
+      // Reload page only if we moved it inside Bookmarks route so UI updates
+      if (modalType === 'move' && window.location.pathname.includes('bookmarks')) {
+         window.location.reload(); 
+      }
+    } catch(e) {}
+  };
+
+  const handleSaveEdit = async () => {
+    if (!token) return;
+    try {
+      const parsedTags = editTags.split(',').map((t: string) => t.trim()).filter(Boolean);
+      const res = await fetch(`http://localhost:3000/api/posts/${post.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ question: editContent, tags: parsedTags })
+      });
+      if (res.ok) {
+        setQuestionContent(editContent);
+        setTagsContent(parsedTags);
+        setIsEditing(false);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -142,7 +218,7 @@ export const PostCard = ({ post }: { post: any }) => {
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-3">
               <UserHoverCard userId={post.author.id}>
-                <div className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                   <img src={post.author.avatar} alt="" className="h-10 w-10 rounded-full border border-slate-200 object-cover" />
                   <div className="text-left">
                     <p className="text-sm font-bold text-slate-900 leading-none">
@@ -155,135 +231,175 @@ export const PostCard = ({ post }: { post: any }) => {
                 </div>
               </UserHoverCard>
             </div>
-            <button className="text-slate-400 hover:text-slate-600 p-1">
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-          </div>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-3 mb-2 break-words leading-tight">
-            {post.title}
-          </h2>
-          <p className="text-slate-600 text-sm leading-relaxed mb-4 whitespace-pre-wrap">
-            {formatContentWithMentions(post.content)}
-          </p>
-
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-            {post.tags?.map((tag: string) => (
-              <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-6 text-slate-500">
-            <button onClick={toggleComments} className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors">
-              <MessageSquare className="h-4 w-4" />
-              <span className="font-medium">{post.comments || comments.length} Comments</span>
-            </button>
-            <div className="relative">
-              <button 
-                onClick={() => setShowSharePopover(!showSharePopover)}
-                className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors"
+            {/* More Menu */}
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <Share2 className="h-4 w-4" />
-                <span className="font-medium">Share</span>
+                <MoreHorizontal className="h-5 w-5" />
               </button>
-              
-              {showSharePopover && (
-                <div className="absolute bottom-full left-0 mb-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                  <p className="text-sm font-bold text-slate-900 mb-3">Share this discussion</p>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={`${window.location.origin}/post/${post.id}`}
-                      className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 outline-none"
-                    />
-                    <button 
-                      onClick={handleCopyLink}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                        copied ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+
+              {showMoreMenu && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <button
+                    onClick={handleBookmark}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-blue-600 text-blue-600' : 'text-slate-400'}`} />
+                    {isBookmarked ? 'Remove Bookmark' : 'Bookmark'}
+                  </button>
+                  {isBookmarked && (
+                     <button
+                       onClick={handleMoveBookmark}
+                       className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                     >
+                       <span className="text-slate-400 font-bold ml-1">→</span>
+                       Move to List
+                     </button>
+                  )}
+                  <button
+                    onClick={() => { handleCopyLink(); setShowMoreMenu(false); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                  >
+                    {copied ? (
+                      <><Share2 className="h-4 w-4 text-green-500" /><span className="text-green-600">Copied!</span></>
+                    ) : (
+                      <><Share2 className="h-4 w-4 text-slate-400" /><span>Copy Link</span></>
+                    )}
+                  </button>
+                  {user?.id === post.author.id && (
+                    <button
+                      onClick={() => { setIsEditing(true); setShowMoreMenu(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
                     >
-                      {copied ? 'Copied!' : 'Copy'}
+                      <Pencil className="h-4 w-4 text-slate-400" />
+                      <span>Edit Question</span>
                     </button>
-                  </div>
-                  <div className="absolute bottom-0 left-4 translate-y-1/2 rotate-45 w-3 h-3 bg-white border-r border-b border-slate-200"></div>
+                  )}
                 </div>
               )}
+            </div>
+          </div>
+
+          {isEditing ? (
+            <div className="mt-3 mb-4">
+              <textarea
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                className="w-full text-base p-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 mb-3 resize-y font-sans"
+                rows={4}
+                placeholder="Question details..."
+              />
+              <input 
+                type="text"
+                value={editTags}
+                onChange={e => setEditTags(e.target.value)}
+                placeholder="Tags (comma separated)"
+                className="w-full text-sm p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 mb-3"
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link to={`/post/${post.id}`} className="block mt-3 mb-4 group text-left">
+              {post.domain && (
+                <span className="inline-block px-2 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-md text-xs font-bold mb-2">
+                  {post.domain}
+                </span>
+              )}
+              <h2 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors break-words leading-relaxed whitespace-pre-wrap line-clamp-4">
+                {formatContentWithMentions(questionContent)}
+              </h2>
+              {post.image && (
+                <div className="mt-3 rounded-xl overflow-hidden border border-slate-100">
+                  <img src={post.image} alt="Attachment" className="max-h-64 object-cover w-full" />
+                </div>
+              )}
+            </Link>
+          )}
+
+          {!isEditing && (
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              {tagsContent.map((tag: string) => (
+                <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-6 text-slate-500">
+            <Link to={`/post/${post.id}`} className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors cursor-pointer">
+              <MessageSquare className="h-4 w-4" />
+              <span className="font-medium">{post.comments || 0} Answers</span>
+            </Link>
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Eye className="h-4 w-4" />
+              <span className="font-medium">{post.views || 0} Views</span>
             </div>
           </div>
           
-          {showComments && (
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <h3 className="font-bold text-slate-900 mb-4 text-sm">Discussions</h3>
-              
-              <div className="space-y-4 mb-4 max-h-64 overflow-y-auto pr-2">
-                {comments.length === 0 ? (
-                  <p className="text-slate-500 text-xs italic">No comments yet. Be the first to share your thoughts!</p>
-                ) : comments.map(comment => (
-                  <div key={comment.id} className={`flex gap-3 ${comment.parentId ? 'ml-8 relative' : ''}`}>
-                    {comment.parentId && <div className="absolute -left-6 top-0 bottom-4 w-px bg-slate-200" />}
-                    {comment.parentId && <div className="absolute -left-6 top-4 w-4 h-px bg-slate-200" />}
-                    
-                    <UserHoverCard userId={comment.author.id}>
-                      <img src={comment.author.avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-200" />
-                    </UserHoverCard>
-                    
-                    <div className="flex-1 bg-slate-50 rounded-xl p-3 border border-slate-100">
-                      <div className="flex justify-between items-start mb-1">
-                        <UserHoverCard userId={comment.author.id}>
-                            <span className="font-bold text-xs text-slate-900 hover:underline">{comment.author.name}</span>
-                        </UserHoverCard>
-                        <span className="text-[10px] text-slate-500">
-                          {formatDistanceToNow(new Date(comment.createdAt + 'Z'), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{formatContentWithMentions(comment.content)}</p>
-                      
-                      <button 
-                        onClick={() => {
-                          setReplyTo(comment.id);
-                          setNewComment(`@${comment.author.name} `);
-                        }}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 mt-2 block"
-                      >
-                        Reply
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Comment Input */}
-              <div className="flex gap-2 items-center mt-2 relative">
-                {user ? <img src={user.avatar} className="w-8 h-8 rounded-full" /> : <div className="w-8 h-8 rounded-full bg-slate-200" />}
-                <div className="flex-1 relative">
-                  <input 
-                    type="text" 
-                    placeholder={replyTo ? "Write a reply..." : "Add a comment..."} 
-                    value={newComment}
-                    onChange={e => setNewComment(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmitComment()}
-                    className="w-full text-sm py-2 pl-3 pr-10 border border-slate-300 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  />
-                  <button 
-                    onClick={handleSubmitComment}
-                    className="absolute right-2 top-1.5 text-slate-400 hover:text-blue-600 p-1 transition-colors"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              {replyTo && (
-                <p className="text-[10px] text-slate-500 ml-10 mt-1 cursor-pointer hover:underline" onClick={() => {setReplyTo(null); setNewComment('')}}>
-                  Cancel reply
-                </p>
-              )}
-            </div>
-          )}
         </div>
       </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] backdrop-blur-sm animate-in fade-in duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-slate-900 mb-4 tracking-tight">
+              {modalType === 'initial-bookmark' ? 'Save to Bookmark List' : 'Move to List'}
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">Select an existing list to save this bookmark into.</p>
+            {availableLists.length > 0 ? (
+              <select
+                autoFocus
+                value={modalInput}
+                onChange={e => setModalInput(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-slate-50 focus:bg-white cursor-pointer"
+              >
+                {availableLists.map(list => <option key={list} value={list}>{list}</option>)}
+              </select>
+            ) : (
+              <input 
+                type="text"
+                autoFocus
+                value={modalInput}
+                onChange={e => setModalInput(e.target.value)}
+                placeholder="List name..."
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-slate-50 focus:bg-white"
+                onKeyDown={e => e.key === 'Enter' && handleModalSubmit()}
+              />
+            )}
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={() => setModalOpen(false)}
+                className="px-5 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+               >
+                 Cancel
+               </button>
+               <button 
+                 onClick={handleModalSubmit}
+                 className="px-5 py-2.5 font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 rounded-xl transition-colors"
+               >
+                 Save
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 };
