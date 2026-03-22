@@ -35,7 +35,7 @@ export const getMyReplies = async (req, res) => {
   try {
     const rows = await db.all(`
       SELECT c.id as commentId, c.question as commentContent, c.createdAt as commentCreatedAt,
-             p.id as postId, p.question as postQuestion, p.title as postTitle, p.tags as postTags, p.upvotes as postUpvotes, p.views as postViews, p.comments as postComments, p.createdAt as postCreatedAt,
+             p.id as postId, p.question as postQuestion, p.title as postTitle, /* p.tags as postTags, */ p.upvotes as postUpvotes, p.views as postViews, p.comments as postComments, p.createdAt as postCreatedAt,
              u.id as authorId, u.username as authorName, u.description as authorDescription, u.avatar as authorAvatar
       FROM comments c
       JOIN posts p ON c.postId = p.id

@@ -45,7 +45,7 @@ export const getPosts = async (req, res) => {
       timeAgo: row.createdAt,
       title: row.title,
       question: row.question,
-      tags: JSON.parse(row.tags),
+      // tags: JSON.parse(row.tags),
       upvotes: row.upvotes,
       views: row.views || 0,
       comments: row.comments,
@@ -107,7 +107,7 @@ export const getPostById = async (req, res) => {
       timeAgo: row.createdAt,
       title: row.title,
       question: row.question,
-      tags: JSON.parse(row.tags),
+      // tags: JSON.parse(row.tags),
       upvotes: row.upvotes,
       views: row.views || 0,
       comments: row.comments,
@@ -147,7 +147,7 @@ export const incrementViewCount = async (req, res) => {
 export const createPost = async (req, res) => {
   const db = getDb();
   try {
-    const { title, question, tags, domain, image, communityId, category } = req.body;
+    const { title, question, /* tags, */ domain, image, communityId, category } = req.body;
     
     if (!question) {
       return res.status(400).json({ error: 'Question is required' });
@@ -162,7 +162,7 @@ export const createPost = async (req, res) => {
 
     const result = await db.run(
       'INSERT INTO posts (userId, title, question, tags, domain, image, communityId, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [req.user.id, title || 'Question', question, JSON.stringify(tags || []), JSON.stringify(domain || []), image || '', communityId || null, category || '']
+      [req.user.id, title || 'Question', question, JSON.stringify([]), JSON.stringify(domain || []), image || '', communityId || null, category || '']
     );
     
     // Award user points for posting
@@ -201,7 +201,7 @@ export const updatePost = async (req, res) => {
   const db = getDb();
   try {
     const { id } = req.params;
-    const { question, tags, domain, image } = req.body;
+    const { question, /* tags, */ domain, image } = req.body;
     const post = await db.get('SELECT userId FROM posts WHERE id = ?', [id]);
     if (!post) return res.status(404).json({ error: 'Not found' });
     if (post.userId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
@@ -209,7 +209,7 @@ export const updatePost = async (req, res) => {
     let updateFields = [];
     let params = [];
     if (question !== undefined) { updateFields.push('question = ?'); params.push(question); }
-    if (tags !== undefined) { updateFields.push('tags = ?'); params.push(JSON.stringify(tags)); }
+    // if (tags !== undefined) { updateFields.push('tags = ?'); params.push(JSON.stringify(tags)); }
     if (domain !== undefined) { updateFields.push('domain = ?'); params.push(JSON.stringify(domain)); }
     if (image !== undefined) { updateFields.push('image = ?'); params.push(image); }
     if (req.body.category !== undefined) { updateFields.push('category = ?'); params.push(req.body.category); }
@@ -301,7 +301,7 @@ export const searchPosts = async (req, res) => {
       let queryParams = [];
 
       if (isTag) {
-         queryStr += ` AND p.tags LIKE ? COLLATE NOCASE`;
+         queryStr += ` AND p.domain LIKE ? COLLATE NOCASE`;
          queryParams.push(`%${searchTerm}%`);
       } else if (searchTerm) {
          queryStr += ` AND (p.title LIKE ? COLLATE NOCASE OR p.question LIKE ? COLLATE NOCASE)`;
@@ -361,7 +361,7 @@ export const searchPosts = async (req, res) => {
           } catch(e) { return ''; }
         })(),
         image: row.image || '',
-        tags: JSON.parse(row.tags || '[]'),
+        // tags: JSON.parse(row.tags || '[]'),
         upvotes: row.upvotes,
         views: row.views || 0,
         comments: row.comments,
@@ -378,13 +378,18 @@ export const searchPosts = async (req, res) => {
 export const getTrendingTags = async (req, res) => {
   const db = getDb();
   try {
-    const rows = await db.all('SELECT tags FROM posts LIMIT 100');
+    const rows = await db.all('SELECT domain FROM posts LIMIT 100');
     const tagCounts = {};
     rows.forEach(r => {
       try {
-        const tags = JSON.parse(r.tags);
-        tags.forEach((tag) => {
-          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        let domains = [];
+        if (r.domain) {
+           domains = r.domain.startsWith('[') ? JSON.parse(r.domain) : [r.domain];
+           if (!Array.isArray(domains)) domains = [];
+        }
+        domains.filter(v => typeof v === 'string').forEach((tag) => {
+          const cleanTag = tag.startsWith('#') ? tag.slice(1) : tag;
+          tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
         });
       } catch(e) {}
     });
@@ -392,7 +397,7 @@ export const getTrendingTags = async (req, res) => {
     const trending = Object.entries(tagCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([tag, count]) => ({ tag: `#${tag.toLowerCase()}`, count }));
+      .map(([tag, count]) => ({ tag, count }));
       
     res.json(trending);
   } catch (e) {
@@ -422,7 +427,7 @@ export const getPostWithMeta = async (postRow, user) => {
     timeAgo: postRow.createdAt,
     title: postRow.title,
     question: postRow.question,
-    tags: JSON.parse(postRow.tags),
+    // tags: JSON.parse(postRow.tags),
     upvotes: postRow.upvotes,
     views: postRow.views || 0,
     comments: postRow.comments,

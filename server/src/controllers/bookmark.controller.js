@@ -17,7 +17,7 @@ export const getBookmarks = async (req, res) => {
       createdAt: row.createdAt,
       title: row.title,
       question: row.question,
-      tags: JSON.parse(row.tags || '[]'),
+      // tags: JSON.parse(row.tags || '[]'),
       category: row.category || (() => {
         try {
           const cats = JSON.parse(row.categories || '[]');

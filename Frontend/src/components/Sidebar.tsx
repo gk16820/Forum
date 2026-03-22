@@ -53,7 +53,7 @@ export const Sidebar = () => {
           {(!Array.isArray(trending) || trending.length === 0) ? (
             <p className="px-4 text-xs text-slate-400 italic">No topics yet.</p>
           ) : trending.map(t => (
-            <Link key={t.tag} to="/tags" className="flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition-all group">
+            <Link key={t.tag} to={`/search?domain=${encodeURIComponent(t.tag)}`} className="flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition-all group">
               <span className="group-hover:translate-x-1 transition-transform">#{t.tag}</span>
               <span className="text-[10px] bg-slate-100/50 text-slate-400 group-hover:bg-brand-100 group-hover:text-brand-700 px-2 py-0.5 rounded-full font-bold transition-colors">{t.count}</span>
             </Link>

@@ -14,19 +14,33 @@ export const Search = () => {
   const initialStatus = new URLSearchParams(location.search).get('status') || '';
   const searchType = new URLSearchParams(location.search).get('type') || 'posts';
   
-  const [domain, setDomain] = useState(initialDomain);
+  const parsedInitialDomain = (() => {
+    try {
+      const d = JSON.parse(initialDomain);
+      if (Array.isArray(d)) return d;
+    } catch(e) {}
+    return initialDomain ? [initialDomain] : [];
+  })();
+  
+  const [domain, setDomain] = useState<string[]>(parsedInitialDomain);
   const [status, setStatus] = useState(initialStatus);
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Sync state with URL when it changes
+  useEffect(() => {
+    setDomain(parsedInitialDomain);
+    setStatus(initialStatus);
+  }, [location.search]);
+
   useEffect(() => {
     const fetchResults = async () => {
-      if (!query.trim() && !domain) return;
+      if (!query.trim() && domain.length === 0) return;
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(query)}&domain=${encodeURIComponent(domain)}&status=${encodeURIComponent(status)}&type=${encodeURIComponent(searchType)}`);
+        const res = await fetch(`http://localhost:3000/api/posts/search?q=${encodeURIComponent(query)}&domain=${encodeURIComponent(domain.length > 0 ? JSON.stringify(domain) : "")}&status=${encodeURIComponent(status)}&type=${encodeURIComponent(searchType)}`);
         if (res.ok) {
           const data = await res.json();
           setResults(data);
@@ -61,9 +75,9 @@ export const Search = () => {
               <h1 className="text-2xl font-bold text-slate-900 leading-tight">Search Results</h1>
               <p className="text-slate-500 text-sm mt-1">
                 {query ? (
-                  <>Showing results for <span className="text-blue-600 font-bold">"{query}"</span> {domain && `in ${domain}`} {status && `(${status})`}</>
+                  <>Showing results for <span className="text-blue-600 font-bold">"{query}"</span> {domain.length > 0 && `in ${domain.join(', ')}`} {status && `(${status})`}</>
                 ) : (
-                  <>Browsing {domain ? `in ${domain}` : 'All Posts'} {status && `(${status})`}</>
+                  <>Browsing {domain.length > 0 ? `in ${domain.join(', ')}` : 'All Posts'} {status && `(${status})`}</>
                 )}
               </p>
             </div>

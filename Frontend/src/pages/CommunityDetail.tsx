@@ -165,15 +165,7 @@ export const CommunityDetail = () => {
               onChange={e => setNewQuestion(e.target.value)}
               className="w-full mb-4 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
             />
-            <div className="mb-4">
-              <input 
-                type="text" 
-                placeholder="Tags (comma separated, optional)" 
-                value={newTags}
-                onChange={e => setNewTags(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
+            {/* Tag input hidden */}
             {newImage && (
               <div className="mb-4 relative rounded-xl overflow-hidden border border-slate-200 inline-block">
                 <img src={newImage} alt="Preview" className="h-32 object-cover" />
