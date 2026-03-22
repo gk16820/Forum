@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DomainSelect } from '../components/DomainSelect';
+import { API_BASE_URL } from '../config';
 
 export const Register = () => {
   const [username, setUsername] = useState('');
@@ -22,7 +23,7 @@ export const Register = () => {
     }
     try {
       const userType = isGuviFaculty ? 'guvi faculty' : 'commonuser';
-      const res = await fetch('http://localhost:3000/api/register', {
+      const res = await fetch(`${API_BASE_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, role, domain, userType })

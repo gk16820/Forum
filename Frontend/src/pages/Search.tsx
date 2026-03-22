@@ -6,6 +6,7 @@ import { UserHoverCard } from '../components/UserHoverCard';
 import { DomainSelect } from '../components/DomainSelect';
 import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
+import { API_BASE_URL } from '../config';
 
 export const Search = () => {
   const location = useLocation();
@@ -41,7 +42,7 @@ export const Search = () => {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`http://localhost:3000/api/posts/search?q=${encodeURIComponent(query)}&domain=${encodeURIComponent(domain.length > 0 ? JSON.stringify(domain) : "")}&status=${encodeURIComponent(status)}&type=${encodeURIComponent(searchType)}`);
+        const res = await fetch(`${API_BASE_URL}/api/posts/search?q=${encodeURIComponent(query)}&domain=${encodeURIComponent(domain.length > 0 ? JSON.stringify(domain) : "")}&status=${encodeURIComponent(status)}&type=${encodeURIComponent(searchType)}`);
         if (res.ok) {
           const data = await res.json();
           setResults(data);

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { UserHoverCard } from './UserHoverCard';
 import { DomainSelect } from './DomainSelect';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const formatContentWithMentions = (question: string) => {
   if (!question) return null;
@@ -100,7 +101,7 @@ export const PostCard = ({ post }: { post: any }) => {
        }
        setUpvotes((prev: number) => prev + delta);
 
-      const res = await fetch(`http://localhost:3000/api/posts/${post.id}/vote`, {
+      const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}/vote`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -130,7 +131,7 @@ export const PostCard = ({ post }: { post: any }) => {
 
   const openBookmarkModal = async (type: 'initial-bookmark' | 'move') => {
     try {
-      const res = await fetch('http://localhost:3000/api/bookmarks/lists', {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/lists`, {
          headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -150,7 +151,7 @@ export const PostCard = ({ post }: { post: any }) => {
     try {
       if (isBookmarked) {
         setIsBookmarked(false);
-        await fetch(`http://localhost:3000/api/bookmarks/${post.id}`, {
+        await fetch(`${API_BASE_URL}/api/bookmarks/${post.id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -172,7 +173,7 @@ export const PostCard = ({ post }: { post: any }) => {
     if (!modalInput.trim()) return;
     try {
       setIsBookmarked(true);
-      await fetch(`http://localhost:3000/api/bookmarks/${post.id}`, {
+      await fetch(`${API_BASE_URL}/api/bookmarks/${post.id}`, {
         method: 'POST', 
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: modalInput.trim() })
@@ -189,7 +190,7 @@ export const PostCard = ({ post }: { post: any }) => {
     if (!token) return;
     if (!window.confirm("Are you sure you want to delete this post? This will remove all associated votes and comments.")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/posts/${post.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -205,7 +206,7 @@ export const PostCard = ({ post }: { post: any }) => {
   const handleSaveEdit = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/posts/${post.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

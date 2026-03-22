@@ -5,6 +5,7 @@ import { PostCard } from '../components/PostCard';
 import { DomainSelect } from '../components/DomainSelect';
 import { useAuth } from '../context/AuthContext';
 import { ImagePlus } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 export const Home = () => {
   const { token, user } = useAuth();
@@ -29,7 +30,7 @@ export const Home = () => {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`http://localhost:3000/api/posts?sort=${sortBy.toLowerCase()}`, { headers });
+      const res = await fetch(`${API_BASE_URL}/api/posts?sort=${sortBy.toLowerCase()}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
@@ -60,7 +61,7 @@ export const Home = () => {
     }
     
     try {
-      const res = await fetch('http://localhost:3000/api/posts', {
+      const res = await fetch(`${API_BASE_URL}/api/posts`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

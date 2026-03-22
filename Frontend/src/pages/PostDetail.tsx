@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, ChevronUp, ChevronDown, MessageSquare } from 'lucide-react';
 import { UserHoverCard } from '../components/UserHoverCard';
+import { API_BASE_URL } from '../config';
 
 const formatContentWithMentions = (question: string) => {
   if (!question) return null;
@@ -41,8 +42,8 @@ export const PostDetail = () => {
       try {
         const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
         const [postRes, commentsRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/posts/${id}`, { headers }),
-          fetch(`http://localhost:3000/api/posts/${id}/comments`)
+          fetch(`${API_BASE_URL}/api/posts/${id}`, { headers }),
+          fetch(`${API_BASE_URL}/api/posts/${id}/comments`)
         ]);
 
         if (postRes.ok && commentsRes.ok) {
@@ -74,7 +75,7 @@ export const PostDetail = () => {
         if (id) {
           sessionStorage.setItem(`viewed_time_${id}`, now.toString());
           try {
-            await fetch(`http://localhost:3000/api/posts/${id}/view`, { method: 'POST' });
+            await fetch(`${API_BASE_URL}/api/posts/${id}/view`, { method: 'POST' });
           } catch (e) {
             console.error('Failed to increment view', e);
           }
@@ -100,7 +101,7 @@ export const PostDetail = () => {
       }
       setUpvotes((prev) => prev + delta);
 
-      const res = await fetch(`http://localhost:3000/api/posts/${id}/vote`, {
+      const res = await fetch(`${API_BASE_URL}/api/posts/${id}/vote`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ type })
@@ -122,7 +123,7 @@ export const PostDetail = () => {
     if (!newComment.trim()) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/posts/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/posts/${id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ question: newComment, parentId: null })
@@ -130,7 +131,7 @@ export const PostDetail = () => {
       if (res.ok) {
         setNewComment('');
         setIsAnswering(false);
-        const commentsRes = await fetch(`http://localhost:3000/api/posts/${id}/comments`);
+        const commentsRes = await fetch(`${API_BASE_URL}/api/posts/${id}/comments`);
         if (commentsRes.ok) setComments(await commentsRes.json());
       }
     } catch (e) {
