@@ -1,11 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Search, Bell, PenSquare, LogOut, LogIn, UserPlus, SlidersHorizontal } from 'lucide-react';
+import { Search, Bell, PenSquare, LogIn, UserPlus, SlidersHorizontal, Settings, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DomainSelect } from './DomainSelect';
-import { UserHoverCard } from './UserHoverCard';
 
 
 export const Navbar = () => {
@@ -19,11 +18,16 @@ export const Navbar = () => {
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setIsSearchFocused(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfileDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -224,11 +228,51 @@ export const Navbar = () => {
                     </div>
                   )}
                 </div>
-                <UserHoverCard userId={user.id}>
-                  <Link to="/my-profile" className="h-8 w-8 rounded-full border-2 border-slate-200 overflow-hidden cursor-pointer hover:border-pale-blue transition-colors block">
+                <div className="relative" ref={profileRef}>
+                  <button 
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className="h-8 w-8 rounded-full border-2 border-slate-200 overflow-hidden cursor-pointer hover:border-pale-blue transition-colors block"
+                  >
                     <img src={user.avatar} alt={user.username} className="h-full w-full object-cover block" />
-                  </Link>
-                </UserHoverCard>
+                  </button>
+
+                  {/* Profile Dropdown */}
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 p-4">
+                      <div className="flex items-center gap-3 mb-4 p-1">
+                        <img src={user.avatar} className="h-12 w-12 rounded-full border border-slate-100 object-cover" alt="" />
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 truncate uppercase text-sm">{user.username}</p>
+                          <p className="text-xs text-slate-500 font-medium truncate">{user.role || 'Member'}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <button 
+                          onClick={() => { navigate('/my-profile'); setShowProfileDropdown(false); }}
+                          className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                          <User className="w-4 h-4 text-slate-400" />
+                          View Profile
+                        </button>
+                        {/* <button 
+                          onClick={() => { navigate('/my-profile/edit'); setShowProfileDropdown(false); }}
+                          className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                          <Settings className="w-4 h-4 text-slate-400" />
+                          Account Settings
+                        </button> */}
+                        <hr className="my-1 border-slate-100" />
+                        <button 
+                          onClick={() => { handleLogout(); setShowProfileDropdown(false); }}
+                          className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <button 
                   onClick={() => {
                     const event = new CustomEvent('openNewPostModal');
@@ -237,10 +281,7 @@ export const Navbar = () => {
                   className="hidden sm:flex bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-medium text-sm items-center gap-2 transition-colors shadow-sm shadow-brand-600/20"
                 >
                   <PenSquare className="h-4 w-4" />
-                  Ask Question
-                </button>
-                <button onClick={handleLogout} className="text-slate-400 hover:text-red-600 transition-colors ml-2">
-                  <LogOut className="h-5 w-5" />
+                  New Post
                 </button>
               </>
             ) : (

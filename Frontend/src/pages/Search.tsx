@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { PostCard } from '../components/PostCard';
 import { Search as SearchIcon, Users, ArrowLeft } from 'lucide-react';
 import { UserHoverCard } from '../components/UserHoverCard';
@@ -9,6 +9,7 @@ import { RightSidebar } from '../components/RightSidebar';
 
 export const Search = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const query = new URLSearchParams(location.search).get('q') || '';
   const initialDomain = new URLSearchParams(location.search).get('domain') || '';
   const initialStatus = new URLSearchParams(location.search).get('status') || '';
@@ -62,10 +63,13 @@ export const Search = () => {
       <Sidebar />
       <div className="flex-1 py-6 lg:px-8 min-w-0">
         <div className="mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-4 group text-sm font-medium">
+        <button 
+          onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')} 
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-4 group text-sm font-medium"
+        >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back to feed
-        </Link>
+        </button>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="flex items-end gap-3">
             <div className="p-3 bg-blue-100 rounded-2xl">

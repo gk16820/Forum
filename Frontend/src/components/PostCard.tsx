@@ -262,9 +262,9 @@ export const PostCard = ({ post }: { post: any }) => {
           <div className="flex justify-between items-center mb-4 min-w-0">
             <div className="flex gap-2 flex-wrap">
               {post.category && (
-                <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-[12px] font-bold shadow-sm hover:bg-accent-100 transition-colors shrink-0">
+                <Link to={`/search?status=${post.category === 'answered' ? 'answered' : post.category === 'unanswered' ? 'unanswered' : ''}`} className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-[12px] font-bold shadow-sm hover:bg-accent-100 transition-colors shrink-0">
                   {post.category}
-                </span>
+                </Link>
               )}
             </div>
             
@@ -438,9 +438,9 @@ export const PostCard = ({ post }: { post: any }) => {
 
              <div className="flex items-center gap-2 flex-wrap justify-end">
               {normalizedDomain.map((d: string) => (
-                <span key={d} className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
+                <Link key={d} to={`/search?domain=${encodeURIComponent(d)}`} className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
                   #{d}
-                </span>
+                </Link>
               ))}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { formatDistanceToNow } from 'date-fns';
@@ -23,6 +23,7 @@ const formatContentWithMentions = (question: string) => {
 
 export const PostDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { token } = useAuth();
   const [post, setPost] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
@@ -157,9 +158,12 @@ export const PostDetail = () => {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex min-h-screen bg-white">
       <Sidebar />
       <div className="flex-1 py-6 lg:px-8 min-w-0">
-        <Link to="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-accent-600 transition-colors mb-4 group text-sm font-medium">
+        <button 
+          onClick={() => window.history.length > 1 ? window.history.back() : navigate('/')} 
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-accent-600 transition-colors mb-4 group text-sm font-medium"
+        >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to feed
-        </Link>
+        </button>
 
         {/* Question Header */}
         <article className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
@@ -182,9 +186,9 @@ export const PostDetail = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex gap-2 flex-wrap">
                   {post.category && (
-                    <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-sm font-bold shadow-sm">
+                    <Link to={`/search?status=${post.category === 'answered' ? 'answered' : post.category === 'unanswered' ? 'unanswered' : ''}`} className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-sm font-bold shadow-sm hover:bg-accent-100 transition-colors">
                       {post.category}
-                    </span>
+                    </Link>
                   )}
                 </div>
                 <div className="text-xs text-slate-400 flex items-center gap-2">
@@ -210,9 +214,9 @@ export const PostDetail = () => {
               
               <div className="flex items-center gap-2 mb-8 flex-wrap">
                 {(Array.isArray(post.domain) ? post.domain : (post.domain ? [post.domain] : [])).map((d: string) => (
-                  <span key={d} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
+                  <Link key={d} to={`/search?domain=${encodeURIComponent(d)}`} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
                     #{d}
-                  </span>
+                  </Link>
                 ))}
               </div>
 

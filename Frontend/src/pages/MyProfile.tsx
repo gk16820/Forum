@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, Calendar, Heart, Briefcase, Globe, MessageSquare, PenSquare } from 'lucide-react';
+import { Pencil, Calendar, Heart, Briefcase, Globe, MessageSquare, PenSquare, Settings, Bell } from 'lucide-react';
 import { format } from 'date-fns';
 import { X } from 'lucide-react';
 import { PostCard } from '../components/PostCard';
@@ -128,7 +128,7 @@ export const MyProfile = () => {
           {/* Tabs */}
           <div className="border-b border-slate-100 mb-8">
             <div className="flex gap-8 overflow-x-auto">
-              {['About', 'My Posts', 'Activity'].map((tab) => (
+              {['About', 'My Posts', 'Activity', 'Settings'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -257,6 +257,45 @@ export const MyProfile = () => {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+            )}
+            
+            {activeTab === 'Settings' && (
+              <div className="bg-slate-50/50 rounded-3xl border border-slate-100 p-8 space-y-8 animate-in slide-in-from-top-4 duration-300">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-accent-600" />
+                    Account Settings
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <button className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 hover:border-accent-200 transition-all group opacity-50 cursor-not-allowed">
+                      <div className="flex items-center gap-3">
+                        <Bell className="w-4 h-4 text-slate-400" />
+                        <span className="font-bold text-slate-700">Notification Preferences</span>
+                      </div>
+                      <Globe className="w-4 h-4 text-slate-300" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-8 border-t border-slate-100">
+                  <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-accent-600" />
+                    Privacy & Security
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100">
+                      <div>
+                        <p className="font-bold text-slate-700">Public Profile</p>
+                        <p className="text-xs text-slate-500">Allow everyone to see your activity</p>
+                      </div>
+                      <div className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none bg-accent-600">
+                        <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

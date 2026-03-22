@@ -4,10 +4,10 @@ import { RightSidebar } from '../components/RightSidebar';
 import { PostCard } from '../components/PostCard';
 import { DomainSelect } from '../components/DomainSelect';
 import { useAuth } from '../context/AuthContext';
-import { ImagePlus } from 'lucide-react';
+import { ImagePlus, User } from 'lucide-react';
 
 export const Home = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -192,7 +192,7 @@ export const Home = () => {
           </div>
         ) : (
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">Recent Discussions</h1>
+            <h1 className="text-2xl font-bold text-primary tracking-tight">{user? `Welcome back, ${user.username}!` : "Welcome to GUVI Forum!"}</h1>
             <div className="flex items-center gap-2">
               <span className="text-sm text-secondary font-medium">Sort by:</span>
               <select 
