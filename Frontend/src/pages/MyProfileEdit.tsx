@@ -13,14 +13,14 @@ export const MyProfileEdit = () => {
   const [avatar, setAvatar] = useState(user?.avatar || '/Blank profile.png');
   const [description, setDescription] = useState(user?.description || '');
   const [role, setRole] = useState(user?.role || '');
-  const [domain, setDomain] = useState(user?.domain || '');
+  const [domain, setDomain] = useState<string[]>(Array.isArray(user?.domain) ? user?.domain : (user?.domain ? [user?.domain] : []));
   const [interests, setInterests] = useState(user?.interests || '');
   const [success, setSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
   const handleUpdate = async () => {
-    if (!role.trim() || !domain.trim()) {
+    if (!role.trim() || domain.length === 0) {
       setError('Role and Domain are required.');
       return;
     }

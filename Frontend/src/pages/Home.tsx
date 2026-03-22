@@ -4,7 +4,7 @@ import { RightSidebar } from '../components/RightSidebar';
 import { PostCard } from '../components/PostCard';
 import { DomainSelect } from '../components/DomainSelect';
 import { useAuth } from '../context/AuthContext';
-import { ImagePlus, User } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 
 export const Home = () => {
   const { token, user } = useAuth();

@@ -8,7 +8,7 @@ export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
-  const [domain, setDomain] = useState('');
+  const [domain, setDomain] = useState<string[]>([]);
   const [isGuviFaculty, setIsGuviFaculty] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -16,7 +16,7 @@ export const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!role.trim() || !domain.trim()) {
+    if (!role.trim() || domain.length === 0) {
       setError('Role and Domain are required fields.');
       return;
     }

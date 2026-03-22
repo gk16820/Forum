@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Search, Bell, PenSquare, LogIn, UserPlus, SlidersHorizontal, Settings, User, LogOut } from 'lucide-react';
+import { Search, Bell, PenSquare, LogIn, UserPlus, SlidersHorizontal, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
