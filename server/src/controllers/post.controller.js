@@ -76,7 +76,6 @@ export const getPostById = async (req, res) => {
   const db = getDb();
   try {
     const { id } = req.params;
-    await db.run('UPDATE posts SET views = views + 1 WHERE id = ?', [id]);
 
     const row = await db.get(`
       SELECT p.*, u.id as authorId, u.username as authorName, u.description as authorDescription, u.avatar as authorAvatar 
@@ -131,6 +130,17 @@ export const getPostById = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed' });
+  }
+};
+
+export const incrementViewCount = async (req, res) => {
+  const db = getDb();
+  try {
+    const { id } = req.params;
+    await db.run('UPDATE posts SET views = views + 1 WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to increment view count' });
   }
 };
 

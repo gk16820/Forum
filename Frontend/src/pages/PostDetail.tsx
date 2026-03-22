@@ -61,6 +61,28 @@ export const PostDetail = () => {
     fetchPostAndComments();
   }, [id, token]);
 
+  // Handle intentional view counting separately
+  useEffect(() => {
+    const incrementView = async () => {
+      const lastViewed = sessionStorage.getItem(`viewed_time_${id}`);
+      const now = Date.now();
+      
+      // Placed a 5-second debounce to elegantly avoid React 18 StrictMode double-fires 
+      // but still perfectly count every legitimate new visit from the same user!
+      if (!lastViewed || (now - parseInt(lastViewed, 10)) > 5000) {
+        if (id) {
+          sessionStorage.setItem(`viewed_time_${id}`, now.toString());
+          try {
+            await fetch(`http://localhost:3000/api/posts/${id}/view`, { method: 'POST' });
+          } catch (e) {
+            console.error('Failed to increment view', e);
+          }
+        }
+      }
+    };
+    incrementView();
+  }, [id]);
+
   const handleVote = async (type: 'up' | 'down') => {
     if (!token) { alert('Please login to vote'); return; }
     if (isVoting) return;
