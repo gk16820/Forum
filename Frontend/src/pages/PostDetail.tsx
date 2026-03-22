@@ -158,11 +158,13 @@ export const PostDetail = () => {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-4">
-                {post.domain && (
-                  <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-sm font-bold shadow-sm shadow-accent-500/5">
-                    {post.domain}
-                  </span>
-                )}
+                <div className="flex gap-2 flex-wrap">
+                  {post.category && (
+                    <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-sm font-bold shadow-sm">
+                      {post.category}
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs text-slate-400 flex items-center gap-2">
                   <MessageSquare className="w-3.5 h-3.5" /> {comments.length} Answers
                 </div>
@@ -185,9 +187,9 @@ export const PostDetail = () => {
               )}
               
               <div className="flex items-center gap-2 mb-8 flex-wrap">
-                {post.tags?.map((tag: string) => (
-                  <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
-                    #{tag}
+                {(Array.isArray(post.domain) ? post.domain : (post.domain ? [post.domain] : [])).map((d: string) => (
+                  <span key={d} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
+                    #{d}
                   </span>
                 ))}
               </div>

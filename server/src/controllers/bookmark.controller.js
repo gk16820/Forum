@@ -17,11 +17,23 @@ export const getBookmarks = async (req, res) => {
       createdAt: row.createdAt,
       title: row.title,
       question: row.question,
-      tags: JSON.parse(row.tags),
+      tags: JSON.parse(row.tags || '[]'),
+      category: row.category || (() => {
+        try {
+          const cats = JSON.parse(row.categories || '[]');
+          return Array.isArray(cats) ? cats[0] || '' : '';
+        } catch(e) { return ''; }
+      })(),
+      domain: (() => {
+        try {
+          if (!row.domain) return [];
+          const d = row.domain.startsWith('[') ? JSON.parse(row.domain) : [row.domain];
+          return Array.isArray(d) ? d.filter(v => typeof v === 'string') : [];
+        } catch(e) { return row.domain ? [String(row.domain)] : []; }
+      })(),
       upvotes: row.upvotes,
       views: row.views || 0,
       comments: row.comments,
-      domain: row.domain || '',
       image: row.image || '',
       bookmarkCategory: row.bookmarkCategory || 'General',
       userVote: null,

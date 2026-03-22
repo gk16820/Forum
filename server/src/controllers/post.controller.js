@@ -49,9 +49,20 @@ export const getPosts = async (req, res) => {
       upvotes: row.upvotes,
       views: row.views || 0,
       comments: row.comments,
-      domain: row.domain || '',
+      domain: (() => {
+        try {
+          if (!row.domain) return [];
+          const d = row.domain.startsWith('[') ? JSON.parse(row.domain) : [row.domain];
+          return Array.isArray(d) ? d.filter(v => typeof v === 'string') : [];
+        } catch(e) { return row.domain ? [String(row.domain)] : []; }
+      })(),
       image: row.image || '',
-      categories: JSON.parse(row.categories || '[]'),
+      category: row.category || (() => {
+        try {
+          const cats = JSON.parse(row.categories || '[]');
+          return Array.isArray(cats) ? cats[0] || '' : '';
+        } catch(e) { return ''; }
+      })(),
       userVote: req.user ? (userVotes[row.id] || null) : null,
       isBookmarked: req.user ? userBookmarks.has(row.id) : false
     }));
@@ -65,7 +76,7 @@ export const getPostById = async (req, res) => {
   const db = getDb();
   try {
     const { id } = req.params;
-    await db.run('UPDATE posts SET views = views + 2 WHERE id = ?', [id]);
+    await db.run('UPDATE posts SET views = views + 1 WHERE id = ?', [id]);
 
     const row = await db.get(`
       SELECT p.*, u.id as authorId, u.username as authorName, u.description as authorDescription, u.avatar as authorAvatar 
@@ -101,9 +112,20 @@ export const getPostById = async (req, res) => {
       upvotes: row.upvotes,
       views: row.views || 0,
       comments: row.comments,
-      domain: row.domain || '',
+      domain: (() => {
+        try {
+          if (!row.domain) return [];
+          const d = row.domain.startsWith('[') ? JSON.parse(row.domain) : [row.domain];
+          return Array.isArray(d) ? d.filter(v => typeof v === 'string') : [];
+        } catch(e) { return row.domain ? [String(row.domain)] : []; }
+      })(),
       image: row.image || '',
-      categories: JSON.parse(row.categories || '[]'),
+      category: row.category || (() => {
+        try {
+          const cats = JSON.parse(row.categories || '[]');
+          return Array.isArray(cats) ? cats[0] || '' : '';
+        } catch(e) { return ''; }
+      })(),
       userVote,
       isBookmarked
     });
@@ -114,15 +136,23 @@ export const getPostById = async (req, res) => {
 
 export const createPost = async (req, res) => {
   const db = getDb();
-  const { title, question, tags, domain, image, communityId } = req.body;
   try {
-    if (communityId && req.user.userType !== 'guvi faculty') {
-      return res.status(403).json({ error: 'Only GUVI faculty can post in a community' });
+    const { title, question, tags, domain, image, communityId, category } = req.body;
+    
+    if (!question) {
+      return res.status(400).json({ error: 'Question is required' });
+    }
+
+    if (communityId) {
+      const isFaculty = await db.get('SELECT 1 FROM users WHERE id = ? AND (role = ? OR userType = ?)', [req.user.id, 'faculty', 'guvi faculty']);
+      if (!isFaculty) {
+        return res.status(403).json({ error: 'Only GUVI faculty can post in a community' });
+      }
     }
 
     const result = await db.run(
-      'INSERT INTO posts (userId, title, question, tags, domain, image, communityId, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [req.user.id, title, question, JSON.stringify(tags || []), domain || '', image || '', communityId || null, JSON.stringify(req.body.categories || [])]
+      'INSERT INTO posts (userId, title, question, tags, domain, image, communityId, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.user.id, title || 'Question', question, JSON.stringify(tags || []), JSON.stringify(domain || []), image || '', communityId || null, category || '']
     );
     
     // Award user points for posting
@@ -130,7 +160,30 @@ export const createPost = async (req, res) => {
     
     res.status(201).json({ id: result.lastID });
   } catch (err) {
+    console.error('Create post error:', err);
     res.status(500).json({ error: 'Failed to create post' });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  const db = getDb();
+  try {
+    const { id } = req.params;
+    const post = await db.get('SELECT userId FROM posts WHERE id = ?', [id]);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    
+    if (post.userId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    await db.run('DELETE FROM posts WHERE id = ?', [id]);
+    await db.run('DELETE FROM comments WHERE postId = ?', [id]);
+    await db.run('DELETE FROM votes WHERE postId = ?', [id]);
+    await db.run('DELETE FROM bookmarks WHERE postId = ?', [id]);
+    
+    res.json({ message: 'Deleted' });
+  } catch (e) {
+    res.status(500).json({ error: 'Delete failed' });
   }
 };
 
@@ -147,9 +200,9 @@ export const updatePost = async (req, res) => {
     let params = [];
     if (question !== undefined) { updateFields.push('question = ?'); params.push(question); }
     if (tags !== undefined) { updateFields.push('tags = ?'); params.push(JSON.stringify(tags)); }
-    if (domain !== undefined) { updateFields.push('domain = ?'); params.push(domain); }
+    if (domain !== undefined) { updateFields.push('domain = ?'); params.push(JSON.stringify(domain)); }
     if (image !== undefined) { updateFields.push('image = ?'); params.push(image); }
-    if (req.body.categories !== undefined) { updateFields.push('categories = ?'); params.push(JSON.stringify(req.body.categories)); }
+    if (req.body.category !== undefined) { updateFields.push('category = ?'); params.push(req.body.category); }
     
     if (updateFields.length > 0) {
       params.push(id);
@@ -164,6 +217,7 @@ export const updatePost = async (req, res) => {
     res.status(500).json({ error: 'Failed' });
   }
 };
+
 
 export const votePost = async (req, res) => {
   const db = getDb();
@@ -245,8 +299,16 @@ export const searchPosts = async (req, res) => {
       }
 
       if (domain) {
-         queryStr += ` AND p.domain = ?`;
-         queryParams.push(domain);
+        try {
+          const domainList = JSON.parse(domain);
+          if (domainList.length > 0) {
+            queryStr += ` AND (${domainList.map(() => `p.domain LIKE ? COLLATE NOCASE`).join(' OR ')})`;
+            queryParams.push(...domainList.map(d => `%${d}%`));
+          }
+        } catch(e) {
+          queryStr += ` AND p.domain LIKE ? COLLATE NOCASE`;
+          queryParams.push(`%${domain}%`);
+        }
       }
       if (status === 'answered') {
          queryStr += ` AND p.comments > 0`;
@@ -273,12 +335,23 @@ export const searchPosts = async (req, res) => {
           avatar: row.authorAvatar
         },
         createdAt: row.createdAt,
-        timeAgo: row.createdAt, 
         title: row.title,
         question: row.question,
-        domain: row.domain || '',
+        domain: (() => {
+          try {
+            if (!row.domain) return [];
+            const d = row.domain.startsWith('[') ? JSON.parse(row.domain) : [row.domain];
+            return Array.isArray(d) ? d.filter(v => typeof v === 'string') : [];
+          } catch(e) { return row.domain ? [String(row.domain)] : []; }
+        })(),
+        category: row.category || (() => {
+          try {
+            const cats = JSON.parse(row.categories || '[]');
+            return Array.isArray(cats) ? cats[0] || '' : '';
+          } catch(e) { return ''; }
+        })(),
         image: row.image || '',
-        tags: JSON.parse(row.tags),
+        tags: JSON.parse(row.tags || '[]'),
         upvotes: row.upvotes,
         views: row.views || 0,
         comments: row.comments,

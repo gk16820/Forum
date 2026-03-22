@@ -49,13 +49,19 @@ export const Bookmarks = () => {
       setIsCreatingList(false);
       return;
     }
+    const name = newListInput.trim();
     try {
-      await fetch('http://localhost:3000/api/bookmarks/lists', {
+      const res = await fetch('http://localhost:3000/api/bookmarks/lists', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newListInput.trim() })
+        body: JSON.stringify({ name })
       });
-      window.location.reload();
+      if (res.ok) {
+        setLists(prev => [...prev, name]);
+        setActiveCategory(name);
+        setNewListInput('');
+        setIsCreatingList(false);
+      }
     } catch(e) {
       alert("Failed to save list.");
     }
@@ -73,14 +79,17 @@ export const Bookmarks = () => {
 
   const handleModalSubmit = async () => {
     if (!modalInput.trim()) return;
+    const newName = modalInput.trim();
     try {
       await fetch('http://localhost:3000/api/bookmarks/lists', {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ oldName: targetList, newName: modalInput.trim() })
+        body: JSON.stringify({ oldName: targetList, newName })
       });
+      setLists(prev => prev.map(l => l === targetList ? newName : l));
+      if (activeCategory === targetList) setActiveCategory(newName);
+      setPosts(prev => prev.map(p => p.bookmarkCategory === targetList ? { ...p, bookmarkCategory: newName } : p));
       setModalOpen(false);
-      window.location.reload();
     } catch(e) {
       alert("Failed to save list.");
     }

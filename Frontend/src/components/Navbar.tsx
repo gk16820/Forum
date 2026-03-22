@@ -13,7 +13,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchDomain, setSearchDomain] = useState('');
+  const [searchDomain, setSearchDomain] = useState<string[]>([]);
   const [searchStatus, setSearchStatus] = useState('');
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +70,7 @@ export const Navbar = () => {
     if (!searchQuery.trim() && !searchDomain && !searchStatus) return;
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.append('q', searchQuery.trim());
-    if (searchDomain) params.append('domain', searchDomain);
+    if (searchDomain.length > 0) params.append('domain', JSON.stringify(searchDomain));
     if (searchStatus) params.append('status', searchStatus);
     setIsSearchFocused(false);
     navigate(`/search?${params.toString()}`);

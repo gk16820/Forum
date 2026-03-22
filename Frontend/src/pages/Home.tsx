@@ -12,8 +12,8 @@ export const Home = () => {
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
-  const [newCategories, setNewCategories] = useState<string[]>([]);
-  const [newDomain, setNewDomain] = useState('');
+  const [newCategory, setNewCategory] = useState('');
+  const [newDomain, setNewDomain] = useState<string[]>([]);
   const [newImage, setNewImage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('New');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -50,8 +50,8 @@ export const Home = () => {
   }, []);
 
   const handleCreatePost = async () => {
-    if (!newQuestion.trim() || !newDomain) {
-       alert("Please fill in the required fields (Question, Domain)");
+    if (!newQuestion.trim() || newDomain.length === 0 || !newCategory) {
+       alert("Please fill in the required fields (Question, Domain, Category)");
        return;
     }
     if (!token) {
@@ -60,7 +60,7 @@ export const Home = () => {
     }
     
     try {
-      await fetch('http://localhost:3000/api/posts', {
+      const res = await fetch('http://localhost:3000/api/posts', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -69,20 +69,26 @@ export const Home = () => {
         body: JSON.stringify({ 
           title: newTitle || 'Question', 
           question: newQuestion, 
-          categories: newCategories,
+          category: newCategory,
           domain: newDomain,
           image: newImage 
         })
       });
-      setIsCreatingPost(false);
-      setNewTitle('');
-      setNewQuestion('');
-      setNewCategories([]);
-      setNewDomain('');
-      setNewImage(null);
-      fetchPosts();
+      if (res.ok) {
+        setIsCreatingPost(false);
+        setNewTitle('');
+        setNewQuestion('');
+        setNewCategory('');
+        setNewDomain([]);
+        setNewImage(null);
+        fetchPosts();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to post: ${errorData.error || 'Server error'}`);
+      }
     } catch (e) {
       console.error("Error creating post", e);
+      alert("Failed to connect to server");
     }
   };
 
@@ -120,46 +126,38 @@ export const Home = () => {
               className="w-full mb-4 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none resize-none"
             />
             <div className="flex gap-4 mb-4">
-              <div className="flex-1">
-                <DomainSelect value={newDomain} onChange={setNewDomain} required placeholder="Select a Domain (Required)" className="!py-3" />
-              </div>
               <div className="flex-1 relative">
                 <button 
                   type="button"
                   onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                  className="w-full h-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none text-left flex justify-between items-center text-slate-500 font-medium"
+                  className="w-full h-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none text-left flex justify-between items-center text-slate-500 font-medium whitespace-nowrap overflow-hidden"
                 >
                   <span className="truncate">
-                    {newCategories.length > 0 
-                      ? `${newCategories.length} Categories selected` 
-                      : 'Select Categories'}
+                    {newCategory || 'Select Category'}
                   </span>
-                  <span className="text-[10px] transform transition-transform duration-200">▼</span>
+                  <span className="text-[10px]">▼</span>
                 </button>
                 
                 {showCategoryDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-1">
                     {AVAILABLE_CATEGORIES.map(cat => (
-                      <label key={cat} className="flex items-center px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0 group">
-                        <input 
-                          type="checkbox" 
-                          checked={newCategories.includes(cat)}
-                          onChange={() => {
-                            if (newCategories.includes(cat)) {
-                              setNewCategories(newCategories.filter(c => c !== cat));
-                            } else {
-                              setNewCategories([...newCategories, cat]);
-                            }
-                          }}
-                          className="mr-3 h-4 w-4 rounded border-slate-300 text-accent-600 focus:ring-accent-500 transition-all cursor-pointer"
-                        />
-                        <span className={`text-sm font-medium ${newCategories.includes(cat) ? 'text-accent-600' : 'text-slate-600'} group-hover:text-primary transition-colors`}>
-                          {cat}
-                        </span>
-                      </label>
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => {
+                          setNewCategory(cat);
+                          setShowCategoryDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-slate-50 last:border-0 hover:bg-slate-50 ${newCategory === cat ? 'text-accent-600 bg-accent-50/30' : 'text-slate-600'}`}
+                      >
+                        {cat}
+                      </button>
                     ))}
                   </div>
                 )}
+              </div>
+              <div className="flex-1">
+                <DomainSelect value={newDomain} onChange={setNewDomain} placeholder="Select Domain(s)" />
               </div>
             </div>
             {newImage && (

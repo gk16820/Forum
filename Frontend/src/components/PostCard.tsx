@@ -3,6 +3,7 @@ import { ChevronUp, ChevronDown, MoreHorizontal, MessageSquare, Share2, Bookmark
 import { useAuth } from '../context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { UserHoverCard } from './UserHoverCard';
+import { DomainSelect } from './DomainSelect';
 import { Link } from 'react-router-dom';
 
 const formatContentWithMentions = (question: string) => {
@@ -31,16 +32,29 @@ export const PostCard = ({ post }: { post: any }) => {
   const [isBookmarked, setIsBookmarked] = useState<boolean>(post.isBookmarked || false);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(post.title || '');
-  const [editContent, setEditContent] = useState(post.question);
-  const [editTags, setEditTags] = useState(post.tags?.join(', ') || '');
   const [titleContent, setTitleContent] = useState(post.title || '');
   const [questionContent, setQuestionContent] = useState(post.question);
-  const [tagsContent, setTagsContent] = useState<string[]>(post.tags || []);
+  
+  // Safe normalization of domain and categories
+  const normalizedDomain = Array.isArray(post.domain) ? post.domain : (post.domain ? [post.domain] : []);
+  const normalizedCategory = post.category || '';
+
+  const [editTitle, setEditTitle] = useState(post.title || '');
+  const [editContent, setEditContent] = useState(post.question);
+  const [editCategory, setEditCategory] = useState<string>(normalizedCategory);
+  const [editDomain, setEditDomain] = useState<string[]>(normalizedDomain);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  
+  const AVAILABLE_CATEGORIES = [
+    'Career guidance', 'Placement preparation', 'GUVI Courses', 
+    'Learning resourses', 'General advise', 'Debugging/Troubleshooting', 
+    'Tools Suggestion'
+  ];
+
   const moreMenuRef = useRef<HTMLDivElement>(null);
   
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalInput, setModalInput] = useState('');
+  const [modalInput, setModalInput] = useState('General');
   const [modalType, setModalType] = useState<'initial-bookmark' | 'move'>('initial-bookmark');
   const [availableLists, setAvailableLists] = useState<string[]>(['General']);
 
@@ -171,23 +185,45 @@ export const PostCard = ({ post }: { post: any }) => {
     } catch(e) {}
   };
 
+  const handleDeletePost = async () => {
+    if (!token) return;
+    if (!window.confirm("Are you sure you want to delete this post? This will remove all associated votes and comments.")) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/posts/${post.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        window.location.reload();
+      }
+    } catch(e) {
+      alert("Failed to delete post");
+    }
+    setShowMoreMenu(false);
+  };
+
   const handleSaveEdit = async () => {
     if (!token) return;
     try {
-      const parsedTags = editTags.split(',').map((t: string) => t.trim()).filter(Boolean);
       const res = await fetch(`http://localhost:3000/api/posts/${post.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ title: editTitle, question: editContent, tags: parsedTags })
+        body: JSON.stringify({ 
+          title: editTitle, 
+          question: editContent, 
+          category: editCategory,
+          domain: editDomain
+        })
       });
       if (res.ok) {
         setTitleContent(editTitle);
         setQuestionContent(editContent);
-        setTagsContent(parsedTags);
-        setIsEditing(false);
+        // Using global reload or local state update. Let's do local state.
+        // We'll trust the parent or just reload to ensure everything is consistent.
+        window.location.reload(); 
       }
     } catch (e) {
       console.error(e);
@@ -224,11 +260,13 @@ export const PostCard = ({ post }: { post: any }) => {
         {/* Content Column */}
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-center mb-4 min-w-0">
-            {post.domain && (
-              <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-[13px] font-bold shadow-sm shadow-accent-500/5 hover:bg-accent-100 transition-colors shrink-0">
-                {post.domain}
-              </span>
-            )}
+            <div className="flex gap-2 flex-wrap">
+              {post.category && (
+                <span className="inline-block px-3 py-1 bg-accent-50 text-accent-900 border border-accent-100 rounded-lg text-[12px] font-bold shadow-sm hover:bg-accent-100 transition-colors shrink-0">
+                  {post.category}
+                </span>
+              )}
+            </div>
             
             <div className="flex items-center gap-3 ml-auto shrink-0">
               <div className="flex items-center gap-3">
@@ -285,13 +323,22 @@ export const PostCard = ({ post }: { post: any }) => {
                       )}
                     </button>
                     {user?.id === post.author.id && (
-                      <button
-                        onClick={() => { setIsEditing(true); setShowMoreMenu(false); }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
-                      >
-                        <Pencil className="h-4 w-4 text-slate-400" />
-                        <span>Edit Question</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => { setIsEditing(true); setShowMoreMenu(false); }}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                        >
+                          <Pencil className="h-4 w-4 text-slate-400" />
+                          <span>Edit Question</span>
+                        </button>
+                        <button
+                          onClick={handleDeletePost}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100"
+                        >
+                          <span className="text-red-400 font-bold ml-1 text-lg">✕</span>
+                          <span>Delete Post</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
@@ -315,13 +362,41 @@ export const PostCard = ({ post }: { post: any }) => {
                 rows={4}
                 placeholder="Question details..."
               />
-              <input 
-                type="text"
-                value={editTags}
-                onChange={e => setEditTags(e.target.value)}
-                placeholder="Tags (comma separated)"
-                className="w-full text-sm p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 bg-slate-50 mb-3"
-              />
+              <div className="flex gap-3 mb-3">
+                <div className="flex-1 relative">
+                  <button 
+                    type="button"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    className="w-full h-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:outline-none text-left flex justify-between items-center text-slate-500 font-medium bg-slate-50 overflow-hidden"
+                  >
+                    <span className="truncate">
+                      {editCategory || 'Category'}
+                    </span>
+                    <span className="text-[10px]">▼</span>
+                  </button>
+                  
+                  {showCategoryDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] overflow-hidden max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-1">
+                      {AVAILABLE_CATEGORIES.map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            setEditCategory(cat);
+                            setShowCategoryDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-slate-50 last:border-0 hover:bg-slate-50 ${editCategory === cat ? 'text-accent-600 bg-accent-50/30' : 'text-slate-600'}`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <DomainSelect value={editDomain} onChange={setEditDomain} placeholder="Domains" />
+                </div>
+              </div>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setIsEditing(false)}
@@ -361,10 +436,10 @@ export const PostCard = ({ post }: { post: any }) => {
               <span className="font-bold">{post.comments || 0} Answers</span>
             </Link>
 
-            <div className="flex items-center gap-2 flex-wrap justify-end">
-              {tagsContent.map((tag: string) => (
-                <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
-                  #{tag}
+             <div className="flex items-center gap-2 flex-wrap justify-end">
+              {normalizedDomain.map((d: string) => (
+                <span key={d} className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold text-black border border-navy-blue/30 bg-white hover:text-slate-400 hover:border-slate-300 transition-colors cursor-pointer">
+                  #{d}
                 </span>
               ))}
             </div>

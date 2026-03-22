@@ -31,6 +31,11 @@ export async function initDb() {
       tags TEXT NOT NULL,
       upvotes INTEGER DEFAULT 0,
       comments INTEGER DEFAULT 0,
+      domain TEXT DEFAULT "[]",
+      category TEXT DEFAULT "",
+      categories TEXT DEFAULT "[]",
+      image TEXT DEFAULT "",
+      communityId INTEGER DEFAULT NULL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
     );
@@ -118,9 +123,11 @@ export async function initDb() {
   try { await db.run('ALTER TABLE posts RENAME COLUMN content TO question'); } catch (err) {}
   try { await db.run('ALTER TABLE comments RENAME COLUMN content TO question'); } catch (err) {}
   try { await db.run('ALTER TABLE bookmarks ADD COLUMN category TEXT DEFAULT "General"'); } catch (err) {}
-  try { await db.run('ALTER TABLE posts ADD COLUMN domain TEXT DEFAULT ""'); } catch (err) {}
+  try { await db.run('ALTER TABLE posts ADD COLUMN domain TEXT DEFAULT "[]"'); } catch (err) {}
   try { await db.run('ALTER TABLE posts ADD COLUMN image TEXT DEFAULT ""'); } catch (err) {}
   try { await db.run('ALTER TABLE posts ADD COLUMN communityId INTEGER DEFAULT NULL'); } catch (err) {}
+  try { await db.run('ALTER TABLE posts ADD COLUMN category TEXT DEFAULT ""'); } catch (err) {}
+  try { await db.run('ALTER TABLE posts ADD COLUMN categories TEXT DEFAULT "[]"'); } catch (err) {}
   try { await db.run('CREATE TABLE IF NOT EXISTS bookmark_lists (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, name TEXT, UNIQUE(userId, name))'); } catch (err) {}
 
   dbInstance = db;

@@ -143,6 +143,9 @@ export async function initDb() {
     await db.run('ALTER TABLE posts ADD COLUMN communityId INTEGER DEFAULT NULL');
   } catch (err) {}
   try {
+    await db.run('ALTER TABLE posts ADD COLUMN category TEXT DEFAULT ""');
+  } catch (err) {}
+  try {
     await db.run('ALTER TABLE posts ADD COLUMN categories TEXT DEFAULT "[]"');
   } catch (err) {}
   try {

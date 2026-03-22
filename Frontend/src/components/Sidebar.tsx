@@ -7,10 +7,10 @@ export const Sidebar = () => {
   const location = useLocation();
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/trending')
+    fetch('http://localhost:3000/api/posts/trending')
       .then(res => res.json())
-      .then(data => setTrending(data))
-      .catch(console.error);
+      .then(data => setTrending(Array.isArray(data) ? data : []))
+      .catch(e => { console.error(e); setTrending([]); });
   }, []);
 
   const navItems = [
@@ -50,7 +50,7 @@ export const Sidebar = () => {
           Trending Topics
         </h3>
         <div className="space-y-1 px-1">
-          {trending.length === 0 ? (
+          {(!Array.isArray(trending) || trending.length === 0) ? (
             <p className="px-4 text-xs text-slate-400 italic">No topics yet.</p>
           ) : trending.map(t => (
             <Link key={t.tag} to="/tags" className="flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition-all group">
