@@ -3,6 +3,8 @@ import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { Hash } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
+
 
 export const Tags = () => {
   const [tags, setTags] = useState<{tag: string, count: number}[]>([]);
@@ -13,7 +15,7 @@ export const Tags = () => {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/posts/trending');
+        const response = await fetch(`${API_BASE_URL}/api/posts/trending`);
         if (!response.ok) {
           throw new Error(`Server responded with ${response.status}`);
         }

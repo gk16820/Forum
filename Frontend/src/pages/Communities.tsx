@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
+
 
 interface Community {
   id: number;
@@ -26,7 +28,7 @@ export const Communities = () => {
     try {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('http://localhost:3000/api/communities', { headers });
+      const res = await fetch(`${API_BASE_URL}/api/communities`, { headers });
       if (res.ok) {
         setCommunities(await res.json());
       }
@@ -47,7 +49,7 @@ export const Communities = () => {
     setError('');
     
     try {
-      const res = await fetch('http://localhost:3000/api/communities', {
+      const res = await fetch(`${API_BASE_URL}/api/communities`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

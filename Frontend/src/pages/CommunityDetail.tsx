@@ -5,6 +5,8 @@ import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { PostCard } from '../components/PostCard';
 import { ImagePlus } from 'lucide-react';
+import { API_BASE_URL } from '../config';
+
 
 export const CommunityDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +25,7 @@ export const CommunityDetail = () => {
     try {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch(`http://localhost:3000/api/communities/${id}`, { headers });
+      const res = await fetch(`${API_BASE_URL}/api/communities/${id}`, { headers });
       if (res.ok) setCommunity(await res.json());
     } catch (e) {
       console.error(e);
@@ -34,7 +36,7 @@ export const CommunityDetail = () => {
     try {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch(`http://localhost:3000/api/posts?communityId=${id}`, { headers });
+      const res = await fetch(`${API_BASE_URL}/api/posts?communityId=${id}`, { headers });
       if (res.ok) setPosts(await res.json());
     } catch (e) {
       console.error(e);
@@ -55,7 +57,7 @@ export const CommunityDetail = () => {
     }
     try {
       const parsedTags = newTags.split(',').map(tag => tag.trim()).filter(t => t.length > 0);
-      await fetch('http://localhost:3000/api/posts', {
+      await fetch(`${API_BASE_URL}/api/posts`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -94,7 +96,7 @@ export const CommunityDetail = () => {
   const handleJoin = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/communities/${id}/join`, {
+      const res = await fetch(`${API_BASE_URL}/api/communities/${id}/join`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

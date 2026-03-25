@@ -4,6 +4,8 @@ import { RightSidebar } from '../components/RightSidebar';
 import { PostCard } from '../components/PostCard';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
+
 
 export const Bookmarks = () => {
   const { token } = useAuth();
@@ -27,8 +29,8 @@ export const Bookmarks = () => {
     const fetchBookmarks = async () => {
       try {
         const [res, listsRes] = await Promise.all([
-          fetch('http://localhost:3000/api/bookmarks', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('http://localhost:3000/api/bookmarks/lists', { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${API_BASE_URL}/api/bookmarks`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE_URL}/api/bookmarks/lists`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
         if (res.ok) setPosts(await res.json());
         if (listsRes.ok) {
@@ -51,7 +53,7 @@ export const Bookmarks = () => {
     }
     const name = newListInput.trim();
     try {
-      const res = await fetch('http://localhost:3000/api/bookmarks/lists', {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/lists`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -81,7 +83,7 @@ export const Bookmarks = () => {
     if (!modalInput.trim()) return;
     const newName = modalInput.trim();
     try {
-      await fetch('http://localhost:3000/api/bookmarks/lists', {
+      await fetch(`${API_BASE_URL}/api/bookmarks/lists`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ oldName: targetList, newName })

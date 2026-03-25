@@ -8,6 +8,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
+import { API_BASE_URL } from '../config';
+
 
 export const MyProfile = () => {
   const { user, token } = useAuth();
@@ -26,7 +28,7 @@ export const MyProfile = () => {
     setModalData([]); // Loading state
     try {
       const endpoint = type === 'Followers' ? '/api/users/me/followers' : '/api/users/me/following';
-      const res = await fetch(`http://localhost:3000${endpoint}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) setModalData(await res.json());
     } catch(e) { setModalData([]); }
   };
@@ -34,15 +36,15 @@ export const MyProfile = () => {
   useEffect(() => {
     if (!token) return;
     const headers = { 'Authorization': `Bearer ${token}` };
-    fetch('http://localhost:3000/api/users/me/posts', { headers })
+    fetch(`${API_BASE_URL}/api/users/me/posts`, { headers })
       .then(r => r.ok ? r.json() : []).then(setMyPosts).catch(() => {});
-    fetch('http://localhost:3000/api/users/me/upvotes', { headers })
+    fetch(`${API_BASE_URL}/api/users/me/upvotes`, { headers })
       .then(r => r.ok ? r.json() : []).then(setMyUpvotes).catch(() => {});
-    fetch('http://localhost:3000/api/users/me/replies', { headers })
+    fetch(`${API_BASE_URL}/api/users/me/replies`, { headers })
       .then(r => r.ok ? r.json() : []).then(setMyReplies).catch(() => {});
 
     if (user?.id) {
-      fetch(`http://localhost:3000/api/users/${user.id}`, { headers })
+      fetch(`${API_BASE_URL}/api/users/${user.id}`, { headers })
         .then(r => r.ok ? r.json() : null).then(setProfile).catch(() => {});
     }
   }, [token, user?.id]);

@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Home, TrendingUp, Hash, Bookmark, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
+
 
 export const Sidebar = () => {
   const [trending, setTrending] = useState<{tag: string, count: number}[]>([]);
   const location = useLocation();
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/posts/trending')
+    fetch(`${API_BASE_URL}/api/posts/trending`)
+
       .then(res => res.json())
       .then(data => setTrending(Array.isArray(data) ? data : []))
       .catch(e => { console.error(e); setTrending([]); });

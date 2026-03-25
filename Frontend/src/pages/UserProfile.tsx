@@ -5,6 +5,8 @@ import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { Calendar, Heart, ArrowLeft, MoreHorizontal, Briefcase, Globe, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
+import { API_BASE_URL } from '../config';
+
 
 export const UserProfile = () => {
   const { id } = useParams();
@@ -27,7 +29,7 @@ export const UserProfile = () => {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
         
-        const res = await fetch(`http://localhost:3000/api/users/${id}`, { headers });
+        const res = await fetch(`${API_BASE_URL}/api/users/${id}`, { headers });
         if (res.ok) {
            setProfile(await res.json());
         }
@@ -47,7 +49,7 @@ export const UserProfile = () => {
        return;
     }
     try {
-      const res = await fetch(`http://localhost:3000/api/users/${id}/follow`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${id}/follow`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

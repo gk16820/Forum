@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DomainSelect } from './DomainSelect';
+import { API_BASE_URL } from '../config';
+
 
 
 export const Navbar = () => {
@@ -37,7 +39,7 @@ export const Navbar = () => {
   const fetchNotifications = async () => {
     if (!user) return;
     try {
-      const res = await fetch('http://localhost:3000/api/notifications', {
+      const res = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
@@ -58,7 +60,7 @@ export const Navbar = () => {
 
   const markAsRead = async (id: number) => {
     try {
-      await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
+      await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

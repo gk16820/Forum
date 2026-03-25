@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
+
 
 export const RightSidebar = () => {
   const [topUsers, setTopUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/users/top')
+    fetch(`${API_BASE_URL}/api/users/top`)
+
       .then(res => res.json())
       .then(data => setTopUsers(data))
       .catch(console.error);

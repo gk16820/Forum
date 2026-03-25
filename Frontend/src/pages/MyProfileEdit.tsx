@@ -5,6 +5,8 @@ import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { ArrowLeft, Camera, CheckCircle } from 'lucide-react';
 import { DomainSelect } from '../components/DomainSelect';
+import { API_BASE_URL } from '../config';
+
 
 export const MyProfileEdit = () => {
   const { user, token, login } = useAuth();
@@ -27,7 +29,7 @@ export const MyProfileEdit = () => {
     setError('');
     setIsSaving(true);
     try {
-      const res = await fetch('http://localhost:3000/api/users/profile', {
+      const res = await fetch(`${API_BASE_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

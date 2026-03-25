@@ -3,6 +3,8 @@ import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { PostCard } from '../components/PostCard';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
+
 
 export const Trending = () => {
   const { token } = useAuth();
@@ -14,7 +16,7 @@ export const Trending = () => {
       try {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch('http://localhost:3000/api/posts?sort=popular', { headers });
+        const res = await fetch(`${API_BASE_URL}/api/posts?sort=popular`, { headers });
         if (res.ok) setPosts(await res.json());
       } catch (e) {
         console.error(e);

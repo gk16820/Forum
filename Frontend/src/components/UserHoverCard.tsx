@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
+
 
 interface UserHoverCardProps {
   userId: number;
@@ -21,7 +23,7 @@ export const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
       setIsHovering(true);
       if (!profile) {
         try {
-          const res = await fetch(`http://localhost:3000/api/users/${userId}`);
+          const res = await fetch(`${API_BASE_URL}/api/users/${userId}`);
           if (res.ok) setProfile(await res.json());
         } catch (e) {
           console.error(e);

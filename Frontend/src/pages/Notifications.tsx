@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { Bell, Heart, MessageSquare, UserPlus, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { API_BASE_URL } from '../config';
+
 
 export const Notifications = () => {
   const { token } = useAuth();
@@ -13,7 +15,7 @@ export const Notifications = () => {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:3000/api/notifications', {
+    fetch(`${API_BASE_URL}/api/notifications`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.ok ? res.json() : [])
