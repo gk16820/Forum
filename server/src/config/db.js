@@ -1,13 +1,23 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Root is one level up from src/config
+const projectRoot = path.resolve(__dirname, '../../');
 
 let dbInstance = null;
 
 export async function initDb() {
   if (dbInstance) return dbInstance;
 
+  const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+  const dbPath = isVercel ? '/tmp/forum.sqlite' : path.join(projectRoot, 'forum.sqlite');
+
   const db = await open({
-    filename: './forum.sqlite',
+    filename: dbPath,
     driver: sqlite3.Database
   });
 

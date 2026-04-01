@@ -1,15 +1,18 @@
+import 'dotenv/config'; // loads .env
+import { config } from 'dotenv';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+
+// Load .env.local if it exists (overrides .env; for local development)
+const localEnv = resolve(process.cwd(), '.env.local');
+if (existsSync(localEnv)) {
+  config({ path: localEnv, override: true });
+}
+
 import app from './app.js';
-import { initDb } from './config/db.js';
 
 const port = process.env.PORT || 3000;
 
-initDb()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to initialize database:', err);
-    process.exit(1);
-  });
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

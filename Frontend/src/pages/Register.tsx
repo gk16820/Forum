@@ -12,6 +12,7 @@ export const Register = () => {
   const [domain, setDomain] = useState<string[]>([]);
   const [isGuviFaculty, setIsGuviFaculty] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -21,6 +22,7 @@ export const Register = () => {
       setError('Role and Domain are required fields.');
       return;
     }
+    setLoading(true);
     try {
       const userType = isGuviFaculty ? 'guvi faculty' : 'commonuser';
       const res = await fetch(`${API_BASE_URL}/api/register`, {
@@ -38,6 +40,8 @@ export const Register = () => {
       }
     } catch (err) {
       setError('Network error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,9 +134,10 @@ export const Register = () => {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors shadow-md shadow-brand-600/20"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors shadow-md shadow-brand-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </div>
         </form>
