@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Search, Bell, PenSquare, LogIn, UserPlus, SlidersHorizontal, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,8 @@ import { API_BASE_URL } from '../config';
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchDomain, setSearchDomain] = useState<string[]>([]);
@@ -103,7 +105,7 @@ export const Navbar = () => {
             <span className="font-bold text-xl tracking-tight text-primary">GUVI Forum</span>
           </Link>
           
-          <div className="flex-1 max-w-2xl px-8 hidden md:block">
+          <div className={`flex-1 max-w-2xl px-8 hidden md:block ${isAuthPage ? 'invisible pointer-events-none' : ''}`}>
             <div className="relative group" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-slate-400 group-focus-within:text-accent-600 transition-colors" />
@@ -211,7 +213,7 @@ export const Navbar = () => {
                                 </p>
                                 {n.postTitle && <p className="text-[11px] text-slate-500 truncate mt-1">"{n.postTitle}"</p>}
                                 <p className="text-[10px] text-slate-400 mt-1">
-                                  {formatDistanceToNow(new Date(n.createdAt + 'Z'), { addSuffix: true })}
+                                  {(() => { try { if (!n.createdAt) return ''; const raw = n.createdAt; const normalized = /[Zz]$|[+-]\d{2}:\d{2}$/.test(raw) ? raw : raw + 'Z'; const d = new Date(normalized); return isNaN(d.getTime()) ? '' : formatDistanceToNow(d, { addSuffix: true }); } catch { return ''; } })()}
                                 </p>
                               </div>
                               {!n.isRead && <div className="w-2 h-2 bg-brand-600 rounded-full self-center flex-shrink-0" />}

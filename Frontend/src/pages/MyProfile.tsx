@@ -87,9 +87,9 @@ export const MyProfile = () => {
                 <h2 className="text-4xl font-extrabold text-slate-900 mb-1 tracking-tight">
                   {user.username}
                 </h2>
-                {(user.role || user.domain) && (
+                {(user.role ) && (
                   <p className="text-lg text-slate-500 font-medium">
-                    {[user.role, user.domain].filter(Boolean).join(' · ')}
+                    {[user.role].filter(Boolean).join(' · ')}
                   </p>
                 )}
               </div>

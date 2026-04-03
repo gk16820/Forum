@@ -4,7 +4,7 @@ import { Sidebar } from '../components/Sidebar';
 import { RightSidebar } from '../components/RightSidebar';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, ChevronUp, ChevronDown, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ChevronUp, ChevronDown, MessageSquare, Eye } from 'lucide-react';
 import { UserHoverCard } from '../components/UserHoverCard';
 import { API_BASE_URL } from '../config';
 
@@ -50,7 +50,7 @@ export const PostDetail = () => {
           const postData = await postRes.json();
           const commentsData = await commentsRes.json();
           setPost(postData);
-          setUpvotes(postData.upvotes);
+          setUpvotes(postData.upvotes || 0);
           setVoteStatus(postData.userVote);
           setComments(commentsData);
         }
@@ -158,7 +158,7 @@ export const PostDetail = () => {
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex min-h-screen bg-white">
       <Sidebar />
-      <div className="flex-1 py-6 lg:px-8 min-w-0">
+      <div className="flex-1 py-6 lg:px-8 min-w-0 pb-20 md:pb-6">
         <button 
           onClick={() => window.history.length > 1 ? window.history.back() : navigate('/')} 
           className="inline-flex items-center gap-2 text-slate-500 hover:text-accent-600 transition-colors mb-4 group text-sm font-medium"
@@ -192,8 +192,9 @@ export const PostDetail = () => {
                     </Link>
                   )}
                 </div>
-                <div className="text-xs text-slate-400 flex items-center gap-2">
-                  <MessageSquare className="w-3.5 h-3.5" /> {comments.length} Answers
+                <div className="text-xs text-slate-400 flex items-center gap-3">
+                  <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {post.views || 0} views</span>
+                  <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> {comments.length} Answers</span>
                 </div>
               </div>
 
@@ -228,7 +229,7 @@ export const PostDetail = () => {
                     <img src={post.author.avatar} alt="" className="h-9 w-9 rounded-full border border-slate-200 object-cover cursor-pointer" />
                   </UserHoverCard>
                   <div className="text-left">
-                    <p className="text-xs text-slate-500 mb-0.5">Asked {post.createdAt ? formatDistanceToNow(new Date(post.createdAt + 'Z'), { addSuffix: true }) : 'Just now'}</p>
+                    <p className="text-xs text-slate-500 mb-0.5">Asked {(() => { try { if (!post.createdAt) return 'Just now'; const raw = post.createdAt; const normalized = /[Zz]$|[+-]\d{2}:\d{2}$/.test(raw) ? raw : raw + 'Z'; const d = new Date(normalized); return isNaN(d.getTime()) ? 'Just now' : formatDistanceToNow(d, { addSuffix: true }); } catch { return 'Just now'; } })()}</p>
                     <UserHoverCard userId={post.author.id}>
                       <span className="text-sm font-bold text-accent-600 hover:underline cursor-pointer">{post.author.name}</span>
                     </UserHoverCard>
@@ -303,7 +304,7 @@ export const PostDetail = () => {
                       <img src={comment.author.avatar} alt="" className="h-10 w-10 rounded-full border-2 border-white shadow-sm object-cover cursor-pointer" />
                     </UserHoverCard>
                     <div className="text-left">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-0.5">Answered {formatDistanceToNow(new Date(comment.createdAt + 'Z'), { addSuffix: true })}</p>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-0.5">Answered {(() => { try { if (!comment.createdAt) return 'just now'; const raw = comment.createdAt; const normalized = /[Zz]$|[+-]\d{2}:\d{2}$/.test(raw) ? raw : raw + 'Z'; const d = new Date(normalized); return isNaN(d.getTime()) ? 'just now' : formatDistanceToNow(d, { addSuffix: true }); } catch { return 'just now'; } })()}</p>
                       <UserHoverCard userId={comment.author.id}>
                         <span className="text-sm font-bold text-slate-900 hover:text-accent-600 transition-colors cursor-pointer">{comment.author.name}</span>
                       </UserHoverCard>

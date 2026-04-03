@@ -76,8 +76,9 @@ export const Notifications = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-slate-700 leading-relaxed font-medium">
                     <span className="font-extrabold text-slate-900">{notif.actorName}</span>{' '}
-                    {notif.content}
+                    {notif.type === 'follow' ? 'started following you' : notif.type === 'mention' ? 'mentioned you' : 'replied to you'}
                   </p>
+                  {notif.postTitle && <p className="text-sm text-slate-500 italic mt-1">"{notif.postTitle}"</p>}
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2 flex items-center gap-2">
                     {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
                     {!notif.read && <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}

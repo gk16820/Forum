@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
 export const DOMAINS = [
-  'Software / Application Dev',
+  'Web/App Development',
   'AI / ML',
   'Digital Marketing',
   'Cloud Computing',

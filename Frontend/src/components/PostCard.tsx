@@ -20,7 +20,7 @@ const formatContentWithMentions = (question: string) => {
 
 export const PostCard = ({ post }: { post: any }) => {
   const { token, user } = useAuth();
-  const [upvotes, setUpvotes] = useState(post.upvotes);
+  const [upvotes, setUpvotes] = useState(post.upvotes || 0);
   const [voteStatus, setVoteStatus] = useState<'up' | 'down' | null>(post.userVote || null);
   const [isVoting, setIsVoting] = useState(false);
 
@@ -73,7 +73,19 @@ export const PostCard = ({ post }: { post: any }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formattedTime = post.createdAt ? formatDistanceToNow(new Date(post.createdAt + 'Z'), { addSuffix: true }) : 'Just now';
+  const formattedTime = (() => {
+    if (!post.createdAt) return 'Just now';
+    try {
+      // Only append 'Z' if the timestamp has no timezone info (no Z, +, or - after time part)
+      const raw = post.createdAt;
+      const normalized = /[Zz]$|[+-]\d{2}:\d{2}$/.test(raw) ? raw : raw + 'Z';
+      const date = new Date(normalized);
+      if (isNaN(date.getTime())) return 'Just now';
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch {
+      return 'Just now';
+    }
+  })();
 
   const handleVote = async (type: 'up' | 'down') => {
     if (!token) {
@@ -122,11 +134,25 @@ export const PostCard = ({ post }: { post: any }) => {
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const url = `${window.location.origin}/post/${post.id}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Clipboard copy failed:', e);
+      alert('Failed to copy link.');
+    }
   };
 
   const openBookmarkModal = async (type: 'initial-bookmark' | 'move') => {

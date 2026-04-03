@@ -108,7 +108,7 @@ export const Home = () => {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
       <Sidebar />
       
-      <div className="flex-1 py-6 lg:px-8 min-w-0">
+      <div className="flex-1 py-6 lg:px-8 min-w-0 pb-20 md:pb-6">
         {isCreatingPost ? (
           <div className="bg-surface p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 animate-in slide-in-from-top-4 fade-in duration-200">
             <h2 className="text-xl font-bold text-primary mb-4">Ask a Question</h2>
